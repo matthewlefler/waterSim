@@ -23,3 +23,5 @@
 /home/lefler/Documents/gitRepos/waterSim/frontend/obj/Debug/net8.0/frontend.pdb
 /home/lefler/Documents/gitRepos/waterSim/frontend/obj/Debug/net8.0/frontend.genruntimeconfig.cache
 /home/lefler/Documents/gitRepos/waterSim/frontend/obj/Debug/net8.0/ref/frontend.dll
+/home/lefler/Documents/gitRepos/waterSim/frontend/obj/Debug/net8.0/frontend.sourcelink.json
+/home/lefler/Documents/gitRepos/waterSim/frontend/bin/Debug/net8.0/Content/white.xnb

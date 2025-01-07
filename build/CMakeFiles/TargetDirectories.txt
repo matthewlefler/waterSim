@@ -1,0 +1,3 @@
+/home/lefler/Documents/gitRepos/waterSim/build/CMakeFiles/main.dir
+/home/lefler/Documents/gitRepos/waterSim/build/CMakeFiles/edit_cache.dir
+/home/lefler/Documents/gitRepos/waterSim/build/CMakeFiles/rebuild_cache.dir

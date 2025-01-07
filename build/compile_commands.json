@@ -1,0 +1,8 @@
+[
+{
+  "directory": "/home/lefler/Documents/gitRepos/waterSim/build",
+  "command": "/opt/intel/oneapi/compiler/2025.0/bin/icpx -DPOCO_ENABLE_CPP11 -DPOCO_ENABLE_CPP14 -DPOCO_HAVE_FD_EPOLL -DPOCO_OS_FAMILY_UNIX -DUTF8PROC_STATIC -D_DEBUG -D_FILE_OFFSET_BITS=64 -D_LARGEFILE64_SOURCE -D_REENTRANT -D_THREAD_SAFE -D_XOPEN_SOURCE=500 -fsycl -o CMakeFiles/main.dir/src/main.cpp.o -c /home/lefler/Documents/gitRepos/waterSim/backend/src/main.cpp",
+  "file": "/home/lefler/Documents/gitRepos/waterSim/backend/src/main.cpp",
+  "output": "CMakeFiles/main.dir/src/main.cpp.o"
+}
+]
