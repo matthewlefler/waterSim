@@ -73,15 +73,8 @@ CMakeFiles/main.dir/src/main.cpp.o: \
   /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/uses_allocator.h \
   /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/uses_allocator_args.h \
   /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/tuple \
-  /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/sycl.hpp \
-  /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/detail/core.hpp \
-  /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/accessor.hpp \
-  /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/access/access.hpp \
-  /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/aliases.hpp \
-  /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/half_type.hpp \
-  /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/bit_cast.hpp \
-  /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/detail/iostream_proxy.hpp \
-  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/istream \
+  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/iostream \
+  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/ostream \
   /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/ios \
   /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/iosfwd \
   /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/stringfwd.h \
@@ -200,9 +193,24 @@ CMakeFiles/main.dir/src/main.cpp.o: \
   /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/x86_64-linux-gnu/c++/13/bits/ctype_inline.h \
   /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/locale_facets.tcc \
   /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/basic_ios.tcc \
-  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/ostream \
   /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/ostream.tcc \
+  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/istream \
   /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/istream.tcc \
+  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/atomic \
+  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/atomic_base.h \
+  /opt/intel/oneapi/compiler/2025.0/lib/clang/19/include/stdint.h \
+  /usr/include/stdint.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-least.h \
+  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/atomic_lockfree_defines.h \
+  /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/sycl.hpp \
+  /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/detail/core.hpp \
+  /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/accessor.hpp \
+  /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/access/access.hpp \
+  /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/aliases.hpp \
+  /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/half_type.hpp \
+  /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/bit_cast.hpp \
+  /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/detail/iostream_proxy.hpp \
   /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/detail/vector_traits.hpp \
   /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/algorithm \
   /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/stl_algo.h \
@@ -213,10 +221,6 @@ CMakeFiles/main.dir/src/main.cpp.o: \
   /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/pstl/glue_algorithm_defs.h \
   /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/pstl/execution_defs.h \
   /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/cstdint \
-  /opt/intel/oneapi/compiler/2025.0/lib/clang/19/include/stdint.h \
-  /usr/include/stdint.h \
-  /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
-  /usr/include/x86_64-linux-gnu/bits/stdint-least.h \
   /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/functional \
   /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/std_function.h \
   /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/unordered_map \
@@ -248,9 +252,6 @@ CMakeFiles/main.dir/src/main.cpp.o: \
   /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/detail/helpers.hpp \
   /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/memory_enums.hpp \
   /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/ur_api.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/atomic \
-  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/atomic_base.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/atomic_lockfree_defines.h \
   /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/memory \
   /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/stl_raw_storage_iter.h \
   /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/align.h \
@@ -566,7 +567,6 @@ CMakeFiles/main.dir/src/main.cpp.o: \
   /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/ext/oneapi/virtual_mem/virtual_mem.hpp \
   /home/lefler/Documents/gitRepos/waterSim/backend/src/main.h \
   /home/lefler/Documents/gitRepos/waterSim/backend/src/socket/sockets.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/iostream \
   /usr/local/include/Poco/Net/TCPServer.h \
   /usr/local/include/Poco/Net/Net.h /usr/local/include/Poco/Foundation.h \
   /usr/local/include/Poco/Config.h /usr/local/include/Poco/Platform.h \

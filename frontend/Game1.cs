@@ -13,11 +13,15 @@ public class Game1 : Game
     private GraphicsDeviceManager _graphics;
     private SpriteBatch _spriteBatch;
 
+    private int screen_x;
+    private int screen_y;
+
     Texture2D tex;
 
     private Messenger messenger;
 
     private Vector4[,] sim = new Vector4[0,0];
+    private Vector4[,] simTemp;
 
     public Game1()
     {
@@ -53,17 +57,17 @@ public class Game1 : Game
 
         dt = (float) gameTime.ElapsedGameTime.TotalSeconds;
 
-        if(messenger.connected) { sim = messenger.read(); }
-        else { 
-            if(time < 10)
+        if(messenger.connected) 
+        {
+            (simTemp, bool worked) = messenger.read(); 
+            if(worked)
             {
-                time += dt;
+                sim = simTemp;
             }
-            else
-            {
-                time = 0;
-                messenger.connect(); 
-            }
+        }
+        else 
+        { 
+            messenger.connect(); 
         }
 
         // TODO: Add your update logic here
@@ -85,7 +89,8 @@ public class Game1 : Game
             for (int y = 0; y < sim.GetLength(1); y++)
             {
                 Vector4 point = sim[x,y];
-                _spriteBatch.Draw(tex, new Rectangle((int) point.X * (squareWidth + squareGap), (int) point.Y * (squareWidth + squareGap), squareWidth, squareWidth), new Color(point.W, point.W, point.W));        
+
+                _spriteBatch.Draw(tex, new Rectangle((int) x * (squareWidth + squareGap), (int) y * (squareWidth + squareGap), squareWidth, squareWidth), new Color((float) point.X / sim.GetLength(0), (float) point.Y / sim.GetLength(1), point.W));        
             }
         }
 

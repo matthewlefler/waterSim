@@ -21,9 +21,13 @@ packet -> id for 2 byte | size of size for 1 bytes | size of ??? bytes | msg wit
 
 // A C# program for Client sockets
 using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
-using System.Text;
+using System.Security.Claims;
+using System.Security.Cryptography.X509Certificates;
 using Microsoft.Xna.Framework;
 
 namespace Messengers;
@@ -108,25 +112,26 @@ public class Messenger
             }
 
             // Manage of Socket's Exceptions
-            catch (ArgumentNullException ane) {
-
-                Console.WriteLine("ArgumentNullException : {0}", ane.ToString());
+            catch (ArgumentNullException ane) 
+            {
+                // Console.WriteLine("ArgumentNullException : {0}", ane.ToString());
             }
 
-            catch (SocketException se) {
-
-                Console.WriteLine("SocketException : {0}", se.ToString());
+            catch (SocketException se) 
+            {
+                // Console.WriteLine("SocketException : {0}", se.ToString());
             }
 
-            catch (Exception e) {
-                Console.WriteLine("Unexpected exception : {0}", e.ToString());
+            catch (Exception e) 
+            {
+                // Console.WriteLine("Unexpected exception : {0}", e.ToString());
             }
 
         }
 
-        catch (Exception e) {
-
-            Console.WriteLine(e.ToString());
+        catch (Exception e) 
+        {
+            // Console.WriteLine(e.ToString());
         }
     }
 
@@ -145,60 +150,103 @@ public class Messenger
         this.socket.Close();
     }
 
-    public Vector4[,] read()
+    public (Vector4[,], bool) read() // tuple of the sim and a bool of if the read worked
     {
+        Console.WriteLine("start: avalible ->  " + this.socket.Available);
+
         this.socket.Send(basicMessage);
 
         // Data buffer
-        byte[] messageReceived = new byte[1024];
+        byte[] buffer = new byte[1024];
 
-        // We receive the message using 
-        // the method Receive(). This 
-        // method returns number of bytes
-        // received, that we'll use to 
-        // convert them to string
-        int byteRecv = this.socket.Receive(messageReceived);
-
-        for (int i = 0; i < byteRecv; i++)
+        // We receive the header message using 
+        // the method Receive(). This method 
+        // returns number of bytes received
+        int byteRecv;
+        try
         {
-            if(i % 16 == 7)
-            {
-                Console.Write("| ");
-            }
-
-            Console.Write(messageReceived[i].ToString() + " ");
+            byteRecv = this.socket.Receive(buffer);
         }
-        Console.WriteLine();
+        catch (Exception e) 
+        {
+            // Console.WriteLine(e.ToString());
+            return (null, false);
+        }
 
-        Vector4[,] sim = new Vector4[this.simWidth, this.simHeight];
-        
-        int sizeOfSize = messageReceived[2];
+        int sizeOfSize = buffer[2];
 
-        byte[] sizeArr = new byte[] { 0, 0, 0, 0, 0, 0, 0, 0 };
+        byte[] sizeArr = new byte[] { 0, 0, 0, 0, 0, 0, 0, 0 }; 
+
         for (int i = 0; i < sizeOfSize; i++)
         {
-            sizeArr[i] = messageReceived[i + 3];
-            Console.Write(messageReceived[i + 3].ToString() + " ");
+            sizeArr[i] = buffer[i + 3];
         }
-        Console.WriteLine();
+
         int data_size = BitConverter.ToInt32(sizeArr);
+        int data_byte_size = data_size * 16;
+
+        //receive the data of the msg
+        // counts the number of times data is recieved
+        byte[] data = new byte[data_byte_size];
+        int current_index = 0;
         
-        Console.WriteLine(data_size);
+        int timeoutCount = 0;
+        int totalByteRecived = 0;
+        while(totalByteRecived < data_byte_size)
+        {
+            int avalible_bytes = this.socket.Available;
+
+            if(avalible_bytes > 0)
+            {
+                buffer = new byte[this.socket.Available];
+                try
+                {
+                    byteRecv = this.socket.Receive(buffer, buffer.Length, SocketFlags.None);
+                    totalByteRecived += byteRecv;
+                    
+                    for(int i = 0; i < byteRecv; i++)
+                    {
+                        if(current_index >= data_byte_size) { break; }
+
+                        data[current_index] = buffer[i];
+                        current_index++;
+                    }
+
+                    timeoutCount = 0;
+                }
+                catch (Exception e) 
+                {
+                    // Console.WriteLine(e.ToString());
+                    return (null, false);
+                }
+            }
+
+            timeoutCount++;
+
+            if(timeoutCount > 1000)
+            {
+                return (null, false);
+            }
+        }
+
+        // init an appropiate dimenional array to hold the decrypted data
+        Vector4[,] sim = new Vector4[this.simWidth, this.simHeight];
 
         Vector4 temp;
-        for (int i = 2 + sizeOfSize, j = 0; j < data_size; i+=16, j++)
+        for (int i = 0, j = 0; j < data_size; i+=16, j++)
         {
             // float = 4 bytes
-            temp.X = BitConverter.ToSingle(messageReceived, i); // i to i + 3 
-            temp.Y = BitConverter.ToSingle(messageReceived, i + 4); // i + 4 to i + 7
-            temp.Z = BitConverter.ToSingle(messageReceived, i + 8); // i + 8 to i + 11
-            temp.W = BitConverter.ToSingle(messageReceived, i + 12); // i + 12 to i + 15
-            Console.WriteLine(j % this.simWidth + " | " + j/this.simHeight + " | " + j);
-            sim[j % this.simWidth, j/this.simHeight] = temp;
+            temp.X = BitConverter.ToSingle(data, i); // i to i + 3 
+            temp.Y = BitConverter.ToSingle(data, i + 4); // i + 4 to i + 7
+            temp.Z = BitConverter.ToSingle(data, i + 8); // i + 8 to i + 11
+            temp.W = BitConverter.ToSingle(data, i + 12); // i + 12 to i + 15
+
+            sim[j%simWidth, j/simHeight] = temp;
         }
 
-        return sim;
+        return (sim, true);
     }
 
+#nullable disable
 }
 

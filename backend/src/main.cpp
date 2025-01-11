@@ -30,9 +30,9 @@ int main()
 {
     // set up memory
     // initilize the simulation
-    Simulation sim(5, 5);
+    Simulation sim(100, 100);
 
-    Messenger messenger = Messenger(4331, sim.vectors, *sim.pTotalLength);
+    Messenger messenger = Messenger(4331, &sim.vectors, *sim.pWidth, *sim.pHeight);
 
     std::cout << *sim.pWidth << " " << *sim.pHeight << " " << *sim.pTotalLength << "\n";
 
@@ -44,14 +44,7 @@ int main()
         int y = i / *sim.pHeight;
 
         sim.vectors[i] = float4(x, y, i, 0);
-        std::cout << " | " << round(sim.vectors[i].x(), 2) << " " << round(sim.vectors[i].y(), 2) << " " << round(sim.vectors[i].z(), 2) << " " << round(sim.vectors[i].w(), 2) << " ";
-
-        if(i % *sim.pWidth + 1 >= *sim.pWidth)
-        {
-            std::cout << "\n";
-        }
     }
-    std::cout << "\n";
 
     sim.send();
 
@@ -61,9 +54,30 @@ int main()
     while(true)
     {
         sim.next_frame(1.0f);
-        sim.print();
+        //sim.print();
 
-        if(count > 50) { exit = true; }
+        // for(int i = 0; i < *sim.pTotalLength; i++)
+        // {
+        //     std::cout << (int) *(static_cast<std::byte*>(static_cast<void*>(&sim.vectors[i])) + 0) << " ";
+        //     std::cout << (int) *(static_cast<std::byte*>(static_cast<void*>(&sim.vectors[i])) + 1) << " ";
+        //     std::cout << (int) *(static_cast<std::byte*>(static_cast<void*>(&sim.vectors[i])) + 2) << " ";
+        //     std::cout << (int) *(static_cast<std::byte*>(static_cast<void*>(&sim.vectors[i])) + 3) << " ";
+        //     std::cout << (int) *(static_cast<std::byte*>(static_cast<void*>(&sim.vectors[i].y())) + 0) << " ";
+        //     std::cout << (int) *(static_cast<std::byte*>(static_cast<void*>(&sim.vectors[i].y())) + 1) << " ";
+        //     std::cout << (int) *(static_cast<std::byte*>(static_cast<void*>(&sim.vectors[i].y())) + 2) << " ";
+        //     std::cout << (int) *(static_cast<std::byte*>(static_cast<void*>(&sim.vectors[i].y())) + 3) << " ";
+        //     std::cout << (int) *(static_cast<std::byte*>(static_cast<void*>(&sim.vectors[i].z())) + 0) << " ";
+        //     std::cout << (int) *(static_cast<std::byte*>(static_cast<void*>(&sim.vectors[i].z())) + 1) << " ";
+        //     std::cout << (int) *(static_cast<std::byte*>(static_cast<void*>(&sim.vectors[i].z())) + 2) << " ";
+        //     std::cout << (int) *(static_cast<std::byte*>(static_cast<void*>(&sim.vectors[i].z())) + 3) << " ";
+        //     std::cout << (int) *(static_cast<std::byte*>(static_cast<void*>(&sim.vectors[i].w())) + 0) << " ";
+        //     std::cout << (int) *(static_cast<std::byte*>(static_cast<void*>(&sim.vectors[i].w())) + 1) << " ";
+        //     std::cout << (int) *(static_cast<std::byte*>(static_cast<void*>(&sim.vectors[i].w())) + 2) << " ";
+        //     std::cout << (int) *(static_cast<std::byte*>(static_cast<void*>(&sim.vectors[i].w())) + 3) << " ";
+        // }
+        // std::cout << "\n\n";
+
+        if(count > 200) { exit = true; }
 
         if(exit)
         {
@@ -74,9 +88,6 @@ int main()
         sleep(1);
         ++count;
     }
-    
-    // print the final state of the vectors (for testing purposes)
-    sim.print();
 
     std::cout << "\n";
 
