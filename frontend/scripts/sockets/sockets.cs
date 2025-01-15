@@ -29,6 +29,7 @@ using System.Net.Sockets;
 using System.Security.Claims;
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.Xna.Framework;
+using Objects;
 
 namespace Messengers;
 
@@ -107,6 +108,7 @@ public class Messenger
 
                 this.simWidth = messageReceived[3];
                 this.simHeight = messageReceived[4];
+                this.simDepth = messageReceived[5];
 
                 connected = true;
             }
@@ -150,10 +152,13 @@ public class Messenger
         this.socket.Close();
     }
 
-    public (Vector4[,], bool) read() // tuple of the sim and a bool of if the read worked
+    /// <summary>
+    /// pokes the server for data and then sets the sim's data to the decoded received data
+    /// if the transfer of data failes or is corrupted no data is changed and the function returns immediatly
+    /// </summary>
+    /// <param name="sim"> the simulation which holds the data to change </param>
+    public void read(Simulation sim) // tuple of the sim and a bool of if the read worked
     {
-        Console.WriteLine("start: avalible ->  " + this.socket.Available);
-
         this.socket.Send(basicMessage);
 
         // Data buffer
@@ -163,6 +168,12 @@ public class Messenger
         // the method Receive(). This method 
         // returns number of bytes received
         int byteRecv;
+        
+        while(this.socket.Available == 0)
+        {
+            //wait untill data is avalible
+        }
+
         try
         {
             byteRecv = this.socket.Receive(buffer);
@@ -170,7 +181,7 @@ public class Messenger
         catch (Exception e) 
         {
             // Console.WriteLine(e.ToString());
-            return (null, false);
+            return;
         }
 
         int sizeOfSize = buffer[2];
@@ -217,7 +228,7 @@ public class Messenger
                 catch (Exception e) 
                 {
                     // Console.WriteLine(e.ToString());
-                    return (null, false);
+                    return;
                 }
             }
 
@@ -225,12 +236,12 @@ public class Messenger
 
             if(timeoutCount > 1000)
             {
-                return (null, false);
+                return;
             }
         }
 
-        // init an appropiate dimenional array to hold the decrypted data
-        Vector4[,] sim = new Vector4[this.simWidth, this.simHeight];
+        // init an appropiately sized 2 dimenional array to hold the decrypted data
+        Vector4[] sim_data = new Vector4[this.simWidth * this.simHeight * this.simDepth];
 
         Vector4 temp;
         for (int i = 0, j = 0; j < data_size; i+=16, j++)
@@ -241,10 +252,10 @@ public class Messenger
             temp.Z = BitConverter.ToSingle(data, i + 8); // i + 8 to i + 11
             temp.W = BitConverter.ToSingle(data, i + 12); // i + 12 to i + 15
 
-            sim[j%simWidth, j/simHeight] = temp;
+            sim_data[j] = temp;
         }
 
-        return (sim, true);
+        sim.SetData(sim_data, this.simWidth, this.simHeight, this.simDepth);
     }
 
 #nullable disable

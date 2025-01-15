@@ -25,3 +25,5 @@
 /home/lefler/Documents/gitRepos/waterSim/frontend/obj/Debug/net8.0/ref/frontend.dll
 /home/lefler/Documents/gitRepos/waterSim/frontend/obj/Debug/net8.0/frontend.sourcelink.json
 /home/lefler/Documents/gitRepos/waterSim/frontend/bin/Debug/net8.0/Content/white.xnb
+/home/lefler/Documents/gitRepos/waterSim/frontend/bin/Debug/net8.0/MonoGame.Extended.dll
+/home/lefler/Documents/gitRepos/waterSim/frontend/bin/Debug/net8.0/Content/sans-serif.fnt

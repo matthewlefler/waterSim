@@ -100,7 +100,8 @@ class EchoConnection: public Poco::Net::TCPServerConnection
 
                     std::memcpy(&send_buffer[3], &arr_len, size_of_arr_len);
 
-                    ss.sendBytes(&send_buffer, size_of_arr_len + 3);
+                    ss.sendBytes(&send_buffer, 1024); // has to match the receiveing buffer for the header msg in the receiver 
+                                                      // as it is possible that if different the socket will read into the data and delete some data and offset the rest of the data
 
                     if(send_buffer_length > number_of_bytes_to_send) // if the data an be sent in one send call, do so
                     {
@@ -220,5 +221,3 @@ class Messenger
         //TODO: update the data somehow
     }
 };
-
-

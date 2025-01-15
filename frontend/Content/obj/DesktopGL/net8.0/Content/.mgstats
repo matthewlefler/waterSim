@@ -1,2 +1,3 @@
 Source File,Dest File,Processor Type,Content Type,Source File Size,Dest File Size,Build Seconds
+"/home/lefler/Documents/gitRepos/waterSim/frontend/Content/sans-serif.fnt","/home/lefler/Documents/gitRepos/waterSim/frontend/Content/bin/DesktopGL/Content/sans-serif.fnt","CopyItem","File",8318,8318,0.000525
 "/home/lefler/Documents/gitRepos/waterSim/frontend/Content/white.png","/home/lefler/Documents/gitRepos/waterSim/frontend/Content/bin/DesktopGL/Content/white.xnb","TextureProcessor","Texture2DContent",365,87701,0.1241056

@@ -30,11 +30,11 @@ int main()
 {
     // set up memory
     // initilize the simulation
-    Simulation sim(100, 100);
+    Simulation sim(10, 10, 10);
 
     Messenger messenger = Messenger(4331, &sim.vectors, *sim.pWidth, *sim.pHeight);
 
-    std::cout << *sim.pWidth << " " << *sim.pHeight << " " << *sim.pTotalLength << "\n";
+    std::cout << *sim.pWidth << " " << *sim.pHeight << " " << *sim.pTotalLength << " " << *sim.pDepth << "\n";
 
     // print the beginning state of the vectors (for testing purposes)
     // also assign them a value of their index followed by three zeros
@@ -43,7 +43,7 @@ int main()
         int x = i % *sim.pWidth;
         int y = i / *sim.pHeight;
 
-        sim.vectors[i] = float4(x, y, i, 0);
+        sim.vectors[i] = float4(x, y, i, rand() % 2);
     }
 
     sim.send();

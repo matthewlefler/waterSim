@@ -23,6 +23,7 @@ class Simulation
     private:
         int width;
         int height;
+        int depth;
         int totalLength;
 
         queue q;
@@ -30,30 +31,29 @@ class Simulation
         float4* deviceArray;
 
         bool vector_switch = 0;
-        float4* vectors1; //switches to enable reads at any time;
-        float4* vectors2;
+        float4* vectors1; 
 
     public:
         const int* const pWidth = &width;
         const int* const pHeight = &height;
+        const int* const pDepth = &depth;
         const int* const pTotalLength = &totalLength;
 
         //x and y and z vector components + w for brightness or another purpose (such as density)
         std::atomic<float4*> vectors;
 
     //constructor
-    Simulation(int width, int height)
+    Simulation(int width, int height, int depth)
     {
         this->q = queue(cpu_selector_v);
 
         this->height = height;
         this->width = width;
-        this->totalLength = width * height;
+        this->depth = depth;
+        this->totalLength = width * height * depth;
 
         this->vectors1 = new float4[this->totalLength];
-        this->vectors2 = new float4[this->totalLength];
-
-        this->vectors = vectors1;
+        this->vectors = this->vectors1;
 
         // allocate enough space in the device for the array of vectors 
         this->deviceArray = malloc_device<float4>(this->totalLength, q);
@@ -68,7 +68,7 @@ class Simulation
     ~Simulation()
     {
         free(this->deviceArray, q);
-        delete[] this->vectors;
+        delete[] this->vectors1;
     }
 
     void send()
@@ -88,14 +88,14 @@ class Simulation
         {
             h.parallel_for(this->totalLength, [=](id<1> i) 
             { 
-                array[i].w() += 0.1f;
+                // array[i].w() += 0.1f;
 
-                if(array[i].w() > 1.0f)
-                {
-                    array[i].w() = 0.0f;
-                }
+                // if(array[i].w() > 1.0f)
+                // {
+                //     array[i].w() = 0.0f;
+                // }
 
-                /*
+                
                 int count = 0;
                 if( i % pSim->width  == 0)
                 {
@@ -105,15 +105,25 @@ class Simulation
                 {
                     return;
                 }
+                if( i / (pSim->height * pSim->width) == 0 || i / (pSim->height * pSim->width) == (pSim->height * pSim->width) )
+                {
+                    return;
+                }
 
-                if( array[i - 1               ].w() > 0.5f ) { count++; }
-                if( array[i + 1               ].w() > 0.5f ) { count++; }
-                if( array[i + pSim->height    ].w() > 0.5f ) { count++; }
-                if( array[i + pSim->height - 1].w() > 0.5f ) { count++; }
-                if( array[i + pSim->height + 1].w() > 0.5f ) { count++; }
-                if( array[i - pSim->height - 1].w() > 0.5f ) { count++; }
-                if( array[i - pSim->height - 1].w() > 0.5f ) { count++; }
-                if( array[i - pSim->height - 1].w() > 0.5f ) { count++; }
+                count += array[i - 1               ].w();
+                count += array[i + 1               ].w();
+                count += array[i + pSim->height    ].w();
+                count += array[i + pSim->height - 1].w();
+                count += array[i + pSim->height + 1].w();
+                count += array[i - pSim->height - 1].w();
+                count += array[i - pSim->height + 1].w();
+                
+                count += array[i + (pSim->height * pSim->width)].w();
+                count += array[i - (pSim->height * pSim->width)].w();
+                count += array[i + (pSim->height * pSim->width) - 1].w();
+                count += array[i + (pSim->height * pSim->width) + 1].w();
+                count += array[i - (pSim->height * pSim->width) - 1].w();
+                count += array[i - (pSim->height * pSim->width) + 1].w();
 
                 if(count > 4 || count < 1)
                 {
@@ -122,35 +132,16 @@ class Simulation
                 else if(count == 3)
                 {
                     array[i].w() = 1.0f;
-                }*/
+                }
             });
         });
 
-
-        if(this->vector_switch)
+        //then copy it back to the vectors host array
+        this->q.submit([&](handler& h) 
         {
-            //then copy it back to the vectors host array
-            this->q.submit([&](handler& h) 
-            {
-                this->vectors = vectors1;
-                this->vector_switch = false;
-
-                h.depends_on(changeDeviceData);
-                h.memcpy(this->vectors2, deviceArray, this->totalLength * sizeof(float4));
-            });
-        }
-        else
-        {
-            //then copy it back to the vectors host array
-            this->q.submit([&](handler& h) 
-            {
-                this->vectors = vectors2;
-                this->vector_switch = true;
-
-                h.depends_on(changeDeviceData);
-                h.memcpy(this->vectors1, deviceArray, this->totalLength * sizeof(float4));
-            });
-        }
+            h.depends_on(changeDeviceData);
+            h.memcpy(this->vectors1 /*2*/, deviceArray, this->totalLength * sizeof(float4));
+        });
 
         this->q.wait();
     }
@@ -169,5 +160,23 @@ class Simulation
             }
         }
         std::cout << "\n";
+    }
+
+    int getXPos(int index)
+    {
+        return index % this->width;
+    }
+    int getYPos(int index)
+    {
+        return (index / this->height) % (this->width * this->height);
+    }
+    int getZPos(int index)
+    {
+        return index % (this->width * this->height);
+    }
+
+    int getIndex(int x, int y, int z)
+    {
+        return x + (y * this->height) + (z * this->width * this->height);
     }
 };

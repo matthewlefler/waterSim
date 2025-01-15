@@ -13,6 +13,9 @@
 
 #---------------------------------- Content ---------------------------------#
 
+#begin sans-serif.fnt
+/copy:sans-serif.fnt
+
 #begin white.png
 /importer:TextureImporter
 /processor:TextureProcessor

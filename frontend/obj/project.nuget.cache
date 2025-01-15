@@ -1,10 +1,11 @@
 {
   "version": 2,
-  "dgSpecHash": "GKgf8SQH7pIxxrfK00buPTn0o9JWRG3GNFKf4qqJYKKLdu9jYayGMZRN/VZ5xRwkVEHY4s+dlwgiG6AYNFkUIg==",
+  "dgSpecHash": "VtY7kwhONyQSfJHFxM8Bfe75uKQjTpQ9YtGiCrRFWnkujw2rj1eTyVbYlFK9y0R+kOd8zrJ43+YRlvwqk7e3+g==",
   "success": true,
   "projectFilePath": "/home/lefler/Documents/gitRepos/waterSim/frontend/frontend.csproj",
   "expectedPackageFiles": [
     "/home/lefler/.nuget/packages/monogame.content.builder.task/3.8.2.1105/monogame.content.builder.task.3.8.2.1105.nupkg.sha512",
+    "/home/lefler/.nuget/packages/monogame.extended/4.0.3/monogame.extended.4.0.3.nupkg.sha512",
     "/home/lefler/.nuget/packages/monogame.framework.desktopgl/3.8.2.1105/monogame.framework.desktopgl.3.8.2.1105.nupkg.sha512",
     "/home/lefler/.nuget/packages/monogame.library.sdl/2.26.5.5/monogame.library.sdl.2.26.5.5.nupkg.sha512",
     "/home/lefler/.nuget/packages/nvorbis/0.10.4/nvorbis.0.10.4.nupkg.sha512",
