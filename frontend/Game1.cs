@@ -7,6 +7,8 @@ using System;
 using Objects;
 using MonoGame.Extended.BitmapFonts;
 using Cameras;
+using MonoGame.Extended.Particles;
+using MonoGame.Extended.Screens;
 
 namespace frontend;
 
@@ -17,15 +19,18 @@ public class Game1 : Game
 
     private int screen_x;
     private int screen_y;
+    Point screen_middle;
 
     Texture2D tex;
     BitmapFont font;
 
     SimpleCamera camera;
 
+    VoxelObject test_voxel_object;
+
     private Messenger messenger;
 
-    private Simulation sim = new Simulation();
+    private Simulation sim;
     private Vector4[,,] sim_data;
 
     public Game1()
@@ -43,17 +48,31 @@ public class Game1 : Game
         
         screen_x = _graphics.PreferredBackBufferWidth;
         screen_y = _graphics.PreferredBackBufferHeight;
+    
+        screen_middle = new Point(screen_x / 2, screen_y / 2);
+
         Console.WriteLine("screen width: " + screen_x + " screen height: " + screen_y);
 
         // TODO: Add your initialization logic here
-        Console.WriteLine("starting network data messenger");
+
+        Console.WriteLine("Initalizing simulation object");
+        sim= new Simulation(GraphicsDevice);
+        Console.WriteLine("Done");
+
+        Console.WriteLine("Starting network data messenger");
 
         messenger = new Messenger(4331);
         messenger.connect();
 
-        Console.WriteLine("started network data messenger");
+        Console.WriteLine("Started network data messenger");
+
+        camera = new SimpleCamera();
 
         base.Initialize();
+
+        test_voxel_object = new VoxelObject(new Vector3(0, 0, 10), Quaternion.Identity, new Vector3[] { Vector3.Zero }, new Color[] { Color.Green }, 0.2f, GraphicsDevice);
+
+        Console.WriteLine("Initialization done");
     }
 
     protected override void LoadContent()
@@ -71,10 +90,14 @@ public class Game1 : Game
 
     MouseState last_mouse = Mouse.GetState();
     MouseState mouse = Mouse.GetState();
-    KeyboardState keyboard;
+    KeyboardState last_keyboard = Keyboard.GetState();
+    KeyboardState keyboard = Keyboard.GetState();
 
     protected override void Update(GameTime gameTime)
     {
+        dt = (float) gameTime.ElapsedGameTime.TotalSeconds;
+
+        last_keyboard = keyboard;
         keyboard = Keyboard.GetState();
         last_mouse = mouse;
         mouse = Mouse.GetState();
@@ -84,28 +107,33 @@ public class Game1 : Game
 
         if(keyboard.IsKeyDown(Keys.W))
         {
-            camera.Move(Vector3.Forward);
+            camera.Move(Vector3.Forward * dt);
         }
         if(keyboard.IsKeyDown(Keys.S))
         {
-            camera.Move(Vector3.Backward);
+            camera.Move(Vector3.Backward * dt);
         }
 
         if(keyboard.IsKeyDown(Keys.A))
         {
-            camera.Move(Vector3.Left);
+            camera.Move(Vector3.Left * dt);
         }
         if(keyboard.IsKeyDown(Keys.D))
         {
-            camera.Move(Vector3.Right);
+            camera.Move(Vector3.Right * dt);
         }
 
-        Quaternion camera_delta_rotation = Quaternion.CreateFromAxisAngle(Vector3.Up, last_mouse.X - mouse.X);
-        camera_delta_rotation += Quaternion.CreateFromAxisAngle(Vector3.Transform(Vector3.Left, camera.rotation), last_mouse.Y - mouse.Y);
+        if(keyboard.IsKeyDown(Keys.Q))
+        {
+            camera.Move(Vector3.Down * dt);
+        }
+        if(keyboard.IsKeyDown(Keys.E))
+        {
+            camera.Move(Vector3.Up * dt);
+        }
 
-        camera.Rotate(camera_delta_rotation);
+        camera.Rotate((last_mouse.X - mouse.X) * dt, (last_mouse.Y - mouse.Y) * dt);
 
-        dt = (float) gameTime.ElapsedGameTime.TotalSeconds;
 
         if(messenger.connected) 
         {
@@ -121,25 +149,49 @@ public class Game1 : Game
         base.Update(gameTime);
     }
 
+    Color background_color = new Color(0.3f,0.3f,0.3f);
     protected override void Draw(GameTime gameTime)
     {
         double frame_rate = 1.0 / gameTime.ElapsedGameTime.TotalSeconds;
-        GraphicsDevice.Clear(Color.CornflowerBlue);
-
-        Console.WriteLine(sim.voxelObject.vertices.Length);
-        
-        if(sim.voxelObject is not null & sim.voxelObject.vertices.Length > 0)
-        {
-            VertexBuffer vertices_buffer = new VertexBuffer(GraphicsDevice, VertexPositionColor.VertexDeclaration, sim.voxelObject.vertices.Length, BufferUsage.WriteOnly);
-            vertices_buffer.SetData<VertexPositionColor>(sim.voxelObject.vertices);
-            GraphicsDevice.SetVertexBuffer(vertices_buffer);
-
-            GraphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, sim.voxelObject.vertices.Length / 3);
-        }
+        GraphicsDevice.Clear(background_color);
 
         _spriteBatch.Begin();
 
-        _spriteBatch.DrawString(font, frame_rate.ToString(), Vector2.One, Color.WhiteSmoke);
+        BasicEffect basicEffect = new BasicEffect(GraphicsDevice); //effect
+        basicEffect.VertexColorEnabled = true;
+
+        basicEffect.View = camera.view_matrix; //camera projections
+        basicEffect.Projection = camera.projection_matrix;
+
+        VertexPositionColor[] lines = new VertexPositionColor[]
+        {
+            new VertexPositionColor(Vector3.Up, Color.Red),
+            new VertexPositionColor(Vector3.Zero, Color.Red),
+            
+            new VertexPositionColor(Vector3.Right, Color.Green),
+            new VertexPositionColor(Vector3.Zero, Color.Green),
+            
+            new VertexPositionColor(Vector3.Forward, Color.Blue),
+            new VertexPositionColor(Vector3.Zero, Color.Blue),
+        };
+
+        foreach (EffectPass pass in basicEffect.CurrentTechnique.Passes)
+        {
+            pass.Apply();
+
+            GraphicsDevice.DrawUserPrimitives(PrimitiveType.LineList, lines, 0, 3);
+        }
+        
+        if(sim.voxelObject is not null & sim.voxelObject.vertices.Length > 0)
+        {
+            sim.voxelObject.Draw(basicEffect);
+        }
+
+        test_voxel_object.Draw(basicEffect);
+
+        _spriteBatch.DrawString(font, frame_rate.ToString(), Vector2.One, Color.WhiteSmoke, 0, Vector2.Zero, 0.3f, SpriteEffects.None, 0f);
+        _spriteBatch.DrawString(font, camera.position.ToString(), Vector2.UnitY * 30, Color.WhiteSmoke, 0, Vector2.Zero, 0.3f, SpriteEffects.None, 0f);
+        _spriteBatch.DrawString(font, camera.rotation.ToString(), Vector2.UnitY * 60, Color.WhiteSmoke, 0, Vector2.Zero, 0.3f, SpriteEffects.None, 0f);
 
         _spriteBatch.End();
         base.Draw(gameTime);

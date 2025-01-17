@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework;
 using Objects;
 using System.Data;
 using System.Reflection.Metadata.Ecma335;
+using System.Data.Common;
 
 namespace Cameras;
 
@@ -10,17 +11,27 @@ public abstract class Camera
 {
     public Vector3 position { 
         get { return _position; } 
-        set { _position = value; view_matrix = Matrix.CreateTranslation(value) * Matrix.CreateFromQuaternion(_rotation); } 
+        set { 
+            _position = value; 
+            view_matrix = Matrix.Invert(Matrix.CreateFromQuaternion(_rotation) * Matrix.CreateTranslation(value)); 
+        } 
     }
     private Vector3 _position;
 
     public Quaternion rotation { 
         get { return _rotation; } 
-        set {_rotation = value; view_matrix = Matrix.CreateTranslation(_position) * Matrix.CreateFromQuaternion(value); }
+        set {
+            _rotation = value; 
+            view_matrix = Matrix.Invert(Matrix.CreateFromQuaternion(value) * Matrix.CreateTranslation(_position)); 
+        }
     }
     public Quaternion _rotation;
 
-    float field_of_view;
+    public float field_of_view { get{ return _field_of_view; } set { _field_of_view = value; this.projection_matrix = Matrix.CreatePerspectiveFieldOfView(_field_of_view, _aspect_ratio, 0.01f, 1000f); } }
+    private float _field_of_view;
+
+    public float aspect_ratio { get{ return _aspect_ratio; } set { _aspect_ratio = value; this.projection_matrix = Matrix.CreatePerspectiveFieldOfView(_field_of_view, _aspect_ratio, 0.01f, 1000f); } }
+    private float _aspect_ratio;
 
     public Matrix view_matrix;
     public Matrix projection_matrix;
@@ -29,9 +40,10 @@ public abstract class Camera
     {
         this._position = position;
         this._rotation = rotation;
-        this.field_of_view = field_of_view;
+        this._field_of_view = field_of_view;
+        this._aspect_ratio = aspect_ratio;
 
-        this.view_matrix = Matrix.CreateTranslation(position) * Matrix.CreateFromQuaternion(rotation);
+        this.view_matrix = Matrix.Invert(Matrix.CreateFromQuaternion(rotation) * Matrix.CreateTranslation(position));
 
         this.projection_matrix = Matrix.CreatePerspectiveFieldOfView(field_of_view, aspect_ratio, 0.01f, 1000f);
     }
@@ -43,9 +55,9 @@ public abstract class Camera
         this.position += Vector3.Transform(change, _rotation);
     }
 
-    public virtual void Rotate(Quaternion quaternion)
+    public virtual void Rotate(Quaternion rotation)
     {
-        this.rotation = this._rotation + quaternion;
+        this.rotation *= rotation;
     }
 }
 
@@ -56,7 +68,7 @@ public class FollowCamera : Camera
     public Vector3 object_offset;
     private Vector3 move_to_position;
 
-    public FollowCamera(Vector3 offset, Object object_to_follow) : base(Vector3.Zero, Quaternion.Identity, 90.0f, 1.0f)
+    public FollowCamera(Vector3 offset, Object object_to_follow) : base(Vector3.Zero, Quaternion.Identity, 2.0f, 1.0f)
     {
         this.object_offset = offset;
         this.object_to_follow = object_to_follow;
@@ -73,9 +85,36 @@ public class FollowCamera : Camera
 
 public class SimpleCamera : Camera
 {
-    public SimpleCamera() : base(Vector3.Zero, Quaternion.Identity, 90.0f, 1.0f)
+    /// <summary>
+    /// the radians rotation of the camera around the x axis
+    /// </summary>
+    public float x_rotation { get{ return _x_rotation; } set { _x_rotation = value; }}
+    private float _x_rotation = 0;
+
+    /// <summary>
+    /// the radians rotation of the camera around the y axis
+    /// </summary>
+    public float y_rotation { get{ return _y_rotation; } set { _y_rotation = value; }}
+    private float _y_rotation = 0;
+
+    public SimpleCamera() : base(Vector3.Zero, Quaternion.Identity, 2.0f, 1.0f)
     {
 
+    }
+
+    /// <summary>
+    /// Rotate the camera around the x and y axii by the repsective delta values
+    /// </summary>
+    /// <param name="d_yaw"> The amount of radians to rotate the camera around the y axis, the yaw </param>
+    /// <param name="d_pitch"> The amount of radians to rotate the camera around the x axis, the pitch </param>
+    public void Rotate(float d_yaw, float d_pitch)
+    {
+        if(d_yaw == 0 && d_pitch == 0) { return; }
+
+        this.x_rotation += d_yaw;
+        this.y_rotation += d_pitch;
+
+        this.rotation = Quaternion.CreateFromYawPitchRoll(x_rotation, y_rotation, 0f);
     }
 
     public override void Update(float dt)

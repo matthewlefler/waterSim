@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Reflection;
 using Microsoft.Xna.Framework;
@@ -10,11 +11,17 @@ public abstract class Object
     public Vector3 position;
     public Quaternion rotation;
 
-    public Object(Vector3 position, Quaternion rotation)
+    protected GraphicsDevice graphics_device;
+
+    public Object(Vector3 position, Quaternion rotation, GraphicsDevice graphics_device)
     {
         this.position = position;
         this.rotation = rotation;
+
+        this.graphics_device = graphics_device;
     }
+
+    public abstract void Draw(Effect effect);
 }
 
 public class VoxelObject : Object
@@ -24,10 +31,21 @@ public class VoxelObject : Object
 
     public Color[] voxel_colors; // colors of the voxels
     public VertexPositionColor[] vertices;
+    private short[] indices;
 
-    public VoxelObject(Vector3 position, Quaternion rotation, Vector3[] voxel_positions, Color[] voxel_colors, float voxel_size) : base(position, rotation)
+    private VertexBuffer vertex_buffer;
+    private IndexBuffer index_buffer;
+
+
+    public VoxelObject(Vector3 position, Quaternion rotation, 
+                       Vector3[] voxel_positions, Color[] voxel_colors, float voxel_size,
+                       GraphicsDevice graphics_device)
+     : base(position, rotation, graphics_device)
     {
-        Debug.Assert(voxel_colors.Length == voxel_positions.Length);
+        if(voxel_colors.Length != voxel_positions.Length)
+        {
+            throw new System.Exception("voxel object creation with voxel colors length not matching voxel positions length");
+        }
 
         this.voxel_cube_offsets = voxel_positions;
         vertices = new VertexPositionColor[voxel_cube_offsets.Length * 12 * 3]; // 12 triangles * 3 vertex per triangle 
@@ -39,13 +57,19 @@ public class VoxelObject : Object
 
     public void SetData(Vector3[] voxel_positions, Color[] voxel_colors)
     {
+        if(voxel_colors.Length != voxel_positions.Length)
+        {
+            throw new System.Exception("voxel object set data with voxel colors length not matching voxel positions length");
+        }
+
         this.voxel_cube_offsets = voxel_positions;
         this.voxel_colors = voxel_colors;
     }
 
     public void UpdateVertices()
     {
-        vertices = new VertexPositionColor[voxel_cube_offsets.Length * 12 * 3]; // 12 triangles * 3 vertex per triangle 
+        this.vertices = new VertexPositionColor[voxel_cube_offsets.Length * 8]; // 8 vertices per cube 
+        this.indices = new short[voxel_cube_offsets.Length * 36];
 
         Vector3[] cube_points = new Vector3[] {
             (Vector3.Up   + Vector3.Forward  + Vector3.Left ) * size, // vertex 0
@@ -70,57 +94,51 @@ public class VoxelObject : Object
          *   6      7
         */
 
-        for(int i = 0, j = 0; i < this.voxel_cube_offsets.Length; i++, j+=36)
+        for(int i = 0, j = 0, k = 0; i < this.voxel_cube_offsets.Length; i++, j+=8, k+=36)
         {
             Vector3 voxel_offset = voxel_cube_offsets[i];
 
-            vertices[j   ] = new VertexPositionColor(voxel_offset + cube_points[0], voxel_colors[i]); // triangle 1 TOP FACE
-            vertices[j+1 ] = new VertexPositionColor(voxel_offset + cube_points[1], voxel_colors[i]);
-            vertices[j+2 ] = new VertexPositionColor(voxel_offset + cube_points[3], voxel_colors[i]);
+            vertices[j    ] = new VertexPositionColor(voxel_offset + cube_points[0], voxel_colors[i]); // vertex 0
+            vertices[j + 1] = new VertexPositionColor(voxel_offset + cube_points[1], voxel_colors[i]); // vertex 1
+            vertices[j + 2] = new VertexPositionColor(voxel_offset + cube_points[2], voxel_colors[i]); // vertex 2
+            vertices[j + 3] = new VertexPositionColor(voxel_offset + cube_points[3], voxel_colors[i]); // vertex 3
+            vertices[j + 4] = new VertexPositionColor(voxel_offset + cube_points[4], voxel_colors[i]); // vertex 4
+            vertices[j + 5] = new VertexPositionColor(voxel_offset + cube_points[5], voxel_colors[i]); // vertex 5
+            vertices[j + 6] = new VertexPositionColor(voxel_offset + cube_points[6], voxel_colors[i]); // vertex 6
+            vertices[j + 7] = new VertexPositionColor(voxel_offset + cube_points[7], voxel_colors[i]); // vertex 7
 
-            vertices[j+3 ] = new VertexPositionColor(voxel_offset + cube_points[2], voxel_colors[i]); // triangle 2
-            vertices[j+4 ] = new VertexPositionColor(voxel_offset + cube_points[0], voxel_colors[i]);
-            vertices[j+5 ] = new VertexPositionColor(voxel_offset + cube_points[3], voxel_colors[i]);
+            indices[k] = (short) (j    ); indices[k] = (short) (j + 1); indices[k] = (short) (j + 3); // tri 1  top
+            indices[k] = (short) (j + 2); indices[k] = (short) (j    ); indices[k] = (short) (j + 3); // tri 2
+            indices[k] = (short) (j + 2); indices[k] = (short) (j + 3); indices[k] = (short) (j + 7); // tri 3  front
+            indices[k] = (short) (j + 6); indices[k] = (short) (j + 2); indices[k] = (short) (j + 7); // tri 4
+            indices[k] = (short) (j + 3); indices[k] = (short) (j + 1); indices[k] = (short) (j + 5); // tri 5  right
+            indices[k] = (short) (j + 7); indices[k] = (short) (j + 3); indices[k] = (short) (j + 5); // tri 6
+            indices[k] = (short) (j + 5); indices[k] = (short) (j + 1); indices[k] = (short) (j    ); // tri 7  back
+            indices[k] = (short) (j + 4); indices[k] = (short) (j + 5); indices[k] = (short) (j    ); // tri 8
+            indices[k] = (short) (j + 4); indices[k] = (short) (j    ); indices[k] = (short) (j + 2); // tri 9  left
+            indices[k] = (short) (j + 4); indices[k] = (short) (j + 2); indices[k] = (short) (j + 6); // tri 10
+            indices[k] = (short) (j + 7); indices[k] = (short) (j + 4); indices[k] = (short) (j + 6); // tri 11 bottom
+            indices[k] = (short) (j + 7); indices[k] = (short) (j + 5); indices[k] = (short) (j + 4); // tri 12
+        }
 
-            vertices[j+6 ] = new VertexPositionColor(voxel_offset + cube_points[2], voxel_colors[i]); // triangle 3 FRONT FACE
-            vertices[j+7 ] = new VertexPositionColor(voxel_offset + cube_points[3], voxel_colors[i]);
-            vertices[j+8 ] = new VertexPositionColor(voxel_offset + cube_points[6], voxel_colors[i]);
+        this.vertex_buffer = new VertexBuffer(this.graphics_device, VertexPositionColor.VertexDeclaration, this.vertices.Length, BufferUsage.WriteOnly);
+        this.vertex_buffer.SetData<VertexPositionColor>(this.vertices);
 
-            vertices[j+9 ] = new VertexPositionColor(voxel_offset + cube_points[3], voxel_colors[i]); // triangle 4
-            vertices[j+10] = new VertexPositionColor(voxel_offset + cube_points[7], voxel_colors[i]);
-            vertices[j+11] = new VertexPositionColor(voxel_offset + cube_points[6], voxel_colors[i]);
+        this.index_buffer = new IndexBuffer(this.graphics_device, typeof(short), indices.Length, BufferUsage.WriteOnly);
+        this.index_buffer.SetData<short>(indices);
+    }
 
-            vertices[j+12] = new VertexPositionColor(voxel_offset + cube_points[4], voxel_colors[i]); // triangle 5 LEFT FACE
-            vertices[j+13] = new VertexPositionColor(voxel_offset + cube_points[0], voxel_colors[i]);
-            vertices[j+14] = new VertexPositionColor(voxel_offset + cube_points[2], voxel_colors[i]);
+    public override void Draw(Effect effect)
+    {
+        this.graphics_device.SetVertexBuffer(this.vertex_buffer);
 
-            vertices[j+15] = new VertexPositionColor(voxel_offset + cube_points[4], voxel_colors[i]); // triangle 6
-            vertices[j+16] = new VertexPositionColor(voxel_offset + cube_points[2], voxel_colors[i]);
-            vertices[j+17] = new VertexPositionColor(voxel_offset + cube_points[6], voxel_colors[i]);
+        this.graphics_device.Indices = this.index_buffer;
+        
+        foreach (EffectPass pass in effect.CurrentTechnique.Passes)
+        {
+            pass.Apply();
 
-            vertices[j+18] = new VertexPositionColor(voxel_offset + cube_points[7], voxel_colors[i]); // triangle 7 RIGHT FACE
-            vertices[j+19] = new VertexPositionColor(voxel_offset + cube_points[3], voxel_colors[i]);
-            vertices[j+20] = new VertexPositionColor(voxel_offset + cube_points[5], voxel_colors[i]);
-
-            vertices[j+21] = new VertexPositionColor(voxel_offset + cube_points[5], voxel_colors[i]); // triangle 8
-            vertices[j+22] = new VertexPositionColor(voxel_offset + cube_points[3], voxel_colors[i]);
-            vertices[j+23] = new VertexPositionColor(voxel_offset + cube_points[1], voxel_colors[i]);
-
-            vertices[j+24] = new VertexPositionColor(voxel_offset + cube_points[5], voxel_colors[i]); // triangle 9 BACK FACE
-            vertices[j+25] = new VertexPositionColor(voxel_offset + cube_points[1], voxel_colors[i]);
-            vertices[j+26] = new VertexPositionColor(voxel_offset + cube_points[4], voxel_colors[i]);
-
-            vertices[j+27] = new VertexPositionColor(voxel_offset + cube_points[4], voxel_colors[i]); // triangle 10
-            vertices[j+28] = new VertexPositionColor(voxel_offset + cube_points[1], voxel_colors[i]);
-            vertices[j+29] = new VertexPositionColor(voxel_offset + cube_points[0], voxel_colors[i]);
-
-            vertices[j+30] = new VertexPositionColor(voxel_offset + cube_points[6], voxel_colors[i]); // triangle 11 BOTTOM FACE
-            vertices[j+31] = new VertexPositionColor(voxel_offset + cube_points[7], voxel_colors[i]);
-            vertices[j+32] = new VertexPositionColor(voxel_offset + cube_points[4], voxel_colors[i]);
-
-            vertices[j+33] = new VertexPositionColor(voxel_offset + cube_points[4], voxel_colors[i]); // triangle 12
-            vertices[j+34] = new VertexPositionColor(voxel_offset + cube_points[7], voxel_colors[i]);
-            vertices[j+35] = new VertexPositionColor(voxel_offset + cube_points[5], voxel_colors[i]);
+            this.graphics_device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, this.vertices.Length / 3);
         }
     }
 }

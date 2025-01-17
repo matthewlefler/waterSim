@@ -15,17 +15,17 @@ public class Simulation
     public int height;
     public int depth;
 
-    public Simulation()
+    public Simulation(GraphicsDevice graphics_device)
     {
-        this.cells = new Vector4[0];
+        this.cells = new Vector4[] { new Vector4(0, 0, 0, 0) };
 
-        this.width = 0;
-        this.height = 0;
-        this.depth = 0;
+        this.width = 1;
+        this.height = 1;
+        this.depth = 1;
 
 
-        Color[] colors = new Color[this.cells.Length];
-        Vector3[] positions = new Vector3[this.cells.Length];
+        Color[] colors = new Color[1];
+        Vector3[] positions = new Vector3[1];
 
         for (int i = 0; i < this.cells.Length; i++)
         {
@@ -33,10 +33,10 @@ public class Simulation
             positions[i] = this.Get3DPositionVec(i);
         }
 
-        this.voxelObject = new VoxelObject(Vector3.Zero, Quaternion.Identity, positions, colors, 0.1f);
+        this.voxelObject = new VoxelObject(Vector3.Zero, Quaternion.Identity, positions, colors, 0.1f, graphics_device);
     }
 
-    public Simulation(Vector4[] cells, int width, int height, int depth)
+    public Simulation(Vector4[] cells, int width, int height, int depth, GraphicsDevice graphics_device)
     {
         this.cells = cells;
 
@@ -53,7 +53,7 @@ public class Simulation
             positions[i] = this.Get3DPositionVec(i);
         }
 
-        this.voxelObject = new VoxelObject(Vector3.Zero, Quaternion.Identity, positions, colors, 0.1f);
+        this.voxelObject = new VoxelObject(Vector3.Zero, Quaternion.Identity, positions, colors, 0.1f, graphics_device);
     }
 
     public void SetData(Vector4[] new_cells, int width, int height, int depth)

@@ -67,7 +67,7 @@ public class Messenger
             // for the socket. This example 
             // uses port {port} on the local 
             // computer.
-            Console.WriteLine("Connecting at: " + IPAddress.Loopback.ToString() + " and port: " + port.ToString());
+            Console.WriteLine("Will connect to: " + IPAddress.Loopback.ToString() + " and port: " + port.ToString());
             this.ipAddr = IPAddress.Loopback;
             this.endPoint = new IPEndPoint(ipAddr, port);
     }
@@ -111,6 +111,7 @@ public class Messenger
                 this.simDepth = messageReceived[5];
 
                 connected = true;
+                Console.WriteLine($"Messenger connected at {IPAddress.Loopback.ToString()}");
             }
 
             // Manage of Socket's Exceptions
@@ -143,8 +144,10 @@ public class Messenger
     /// </summary>
     public void close()
     {
-
-        this.socket.Send(closingMessage);
+        if(connected)
+        {
+            this.socket.Send(closingMessage);
+        }
         
         // Close Socket using 
         // the method Close()
@@ -157,8 +160,10 @@ public class Messenger
     /// if the transfer of data failes or is corrupted no data is changed and the function returns immediatly
     /// </summary>
     /// <param name="sim"> the simulation which holds the data to change </param>
-    public void read(Simulation sim) // tuple of the sim and a bool of if the read worked
+    public void read(Simulation sim) 
     {
+        if(!connected) { return; }
+
         this.socket.Send(basicMessage);
 
         // Data buffer
