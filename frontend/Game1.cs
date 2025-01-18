@@ -9,6 +9,7 @@ using MonoGame.Extended.BitmapFonts;
 using Cameras;
 using MonoGame.Extended.Particles;
 using MonoGame.Extended.Screens;
+using MonoGame.Extended.Input;
 
 namespace frontend;
 
@@ -26,18 +27,15 @@ public class Game1 : Game
 
     SimpleCamera camera;
 
-    VoxelObject test_voxel_object;
-
     private Messenger messenger;
 
     private Simulation sim;
-    private Vector4[,,] sim_data;
 
     public Game1()
     {
         _graphics = new GraphicsDeviceManager(this);
         Content.RootDirectory = "Content";
-        IsMouseVisible = true;
+        IsMouseVisible = false;
     }
 
     protected override void Initialize()
@@ -45,6 +43,11 @@ public class Game1 : Game
         _graphics.PreferredBackBufferHeight = 1300;
         _graphics.PreferredBackBufferWidth = 1300;
         _graphics.ApplyChanges();
+
+        DepthStencilState depthStencilState = new DepthStencilState();
+        depthStencilState.DepthBufferEnable = true;
+        depthStencilState.DepthBufferFunction = CompareFunction.Greater;
+        GraphicsDevice.DepthStencilState = depthStencilState;
         
         screen_x = _graphics.PreferredBackBufferWidth;
         screen_y = _graphics.PreferredBackBufferHeight;
@@ -66,11 +69,9 @@ public class Game1 : Game
 
         Console.WriteLine("Started network data messenger");
 
-        camera = new SimpleCamera();
+        camera = new SimpleCamera(Vector3.Backward * 2);
 
         base.Initialize();
-
-        test_voxel_object = new VoxelObject(new Vector3(0, 0, 10), Quaternion.Identity, new Vector3[] { Vector3.Zero }, new Color[] { Color.Green }, 0.2f, GraphicsDevice);
 
         Console.WriteLine("Initialization done");
     }
@@ -132,7 +133,7 @@ public class Game1 : Game
             camera.Move(Vector3.Up * dt);
         }
 
-        camera.Rotate((last_mouse.X - mouse.X) * dt, (last_mouse.Y - mouse.Y) * dt);
+        camera.Rotate((last_mouse.X - mouse.X) * dt * 0.3f, (last_mouse.Y - mouse.Y) * dt * 0.3f);
 
 
         if(messenger.connected) 
@@ -159,6 +160,8 @@ public class Game1 : Game
 
         BasicEffect basicEffect = new BasicEffect(GraphicsDevice); //effect
         basicEffect.VertexColorEnabled = true;
+        basicEffect.AmbientLightColor = new Vector3(0.5f,0.5f,0.5f);
+        basicEffect.EmissiveColor = new Vector3(0.5f, 0.5f, 0.5f);
 
         basicEffect.View = camera.view_matrix; //camera projections
         basicEffect.Projection = camera.projection_matrix;
@@ -186,8 +189,6 @@ public class Game1 : Game
         {
             sim.voxelObject.Draw(basicEffect);
         }
-
-        test_voxel_object.Draw(basicEffect);
 
         _spriteBatch.DrawString(font, frame_rate.ToString(), Vector2.One, Color.WhiteSmoke, 0, Vector2.Zero, 0.3f, SpriteEffects.None, 0f);
         _spriteBatch.DrawString(font, camera.position.ToString(), Vector2.UnitY * 30, Color.WhiteSmoke, 0, Vector2.Zero, 0.3f, SpriteEffects.None, 0f);

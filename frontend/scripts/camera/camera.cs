@@ -97,7 +97,7 @@ public class SimpleCamera : Camera
     public float y_rotation { get{ return _y_rotation; } set { _y_rotation = value; }}
     private float _y_rotation = 0;
 
-    public SimpleCamera() : base(Vector3.Zero, Quaternion.Identity, 2.0f, 1.0f)
+    public SimpleCamera(Vector3 position) : base(position, Quaternion.Identity, 2.0f, 1.0f)
     {
 
     }

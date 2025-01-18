@@ -69,7 +69,7 @@ public class Simulation
 
         for (int i = 0; i < this.cells.Length; i++)
         {
-            colors[i] = new Color(this.cells[i].W, this.cells[i].W, this.cells[i].W);
+            colors[i] = new Color(this.cells[i].X, this.cells[i].Y, this.cells[i].W);
             positions[i] = this.Get3DPositionVec(i);
         }
 
