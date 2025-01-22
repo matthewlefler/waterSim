@@ -57,31 +57,43 @@ public class VoxelObject : Object
         UpdateVertices();
     }
 
+    /// <summary>
+    /// sets the vertex and color data and then updates the related data
+    /// </summary>
+    /// <param name="voxel_positions"></param>
+    /// <param name="voxel_colors"></param>
+    /// <exception cref="System.Exception"></exception>
     public void SetData(Vector3[] voxel_positions, Color[] voxel_colors)
     {
         if(voxel_colors.Length != voxel_positions.Length)
         {
-            throw new System.Exception("voxel object set data, voxel colors length does not match voxel positions length");
+            throw new System.Exception($"voxel object set data, voxel colors length does not match voxel positions length \n positions length: {voxel_positions.Length} colors length: {voxel_colors.Length}");
         }
 
         this.voxel_cube_offsets = voxel_positions;
         this.voxel_colors = voxel_colors;
+
+        this.UpdateVertices();
     }
 
+    /// <summary>
+    /// recalc the vertices and vertex buffer, the indices and index buffer
+    /// can only support up to 8192 voxels which is approx. a 20x20x20 cube
+    /// </summary>
     public void UpdateVertices()
     {
         this.vertices = new VertexPositionColor[voxel_cube_offsets.Length * 8]; // 8 vertices per cube 
         this.indices = new short[voxel_cube_offsets.Length * 36];
 
         Vector3[] cube_points = new Vector3[] {
-            (Vector3.Up   + Vector3.Forward  + Vector3.Left ) * size, // vertex 0
-            (Vector3.Up   + Vector3.Forward  + Vector3.Right) * size, // vertex 1
-            (Vector3.Up   + Vector3.Backward + Vector3.Left ) * size, // vertex 2
-            (Vector3.Up   + Vector3.Backward + Vector3.Right) * size, // vertex 3
-            (Vector3.Down + Vector3.Forward  + Vector3.Left ) * size, // vertex 4
-            (Vector3.Down + Vector3.Forward  + Vector3.Right) * size, // vertex 5
-            (Vector3.Down + Vector3.Backward + Vector3.Left ) * size, // vertex 6
-            (Vector3.Down + Vector3.Backward + Vector3.Right) * size, // vertex 7
+            (Vector3.Up   + Vector3.Forward  + Vector3.Left ) * size * 0.5f, // vertex 0
+            (Vector3.Up   + Vector3.Forward  + Vector3.Right) * size * 0.5f, // vertex 1
+            (Vector3.Up   + Vector3.Backward + Vector3.Left ) * size * 0.5f, // vertex 2
+            (Vector3.Up   + Vector3.Backward + Vector3.Right) * size * 0.5f, // vertex 3
+            (Vector3.Down + Vector3.Forward  + Vector3.Left ) * size * 0.5f, // vertex 4
+            (Vector3.Down + Vector3.Forward  + Vector3.Right) * size * 0.5f, // vertex 5
+            (Vector3.Down + Vector3.Backward + Vector3.Left ) * size * 0.5f, // vertex 6
+            (Vector3.Down + Vector3.Backward + Vector3.Right) * size * 0.5f, // vertex 7
         };
         /*
          *     0 ______1
@@ -98,15 +110,16 @@ public class VoxelObject : Object
         for(int i = 0, j = 0, k = 0; i < this.voxel_cube_offsets.Length; i++, j+=8, k+=36)
         {
             Vector3 voxel_offset = voxel_cube_offsets[i];
+            Color voxel_color = voxel_colors[i];
 
-            vertices[j    ] = new VertexPositionColor(voxel_offset + cube_points[0], voxel_colors[i]); // vertex 0
-            vertices[j + 1] = new VertexPositionColor(voxel_offset + cube_points[1], voxel_colors[i]); // vertex 1
-            vertices[j + 2] = new VertexPositionColor(voxel_offset + cube_points[2], voxel_colors[i]); // vertex 2
-            vertices[j + 3] = new VertexPositionColor(voxel_offset + cube_points[3], voxel_colors[i]); // vertex 3a
-            vertices[j + 4] = new VertexPositionColor(voxel_offset + cube_points[4], voxel_colors[i]); // vertex 4
-            vertices[j + 5] = new VertexPositionColor(voxel_offset + cube_points[5], voxel_colors[i]); // vertex 5
-            vertices[j + 6] = new VertexPositionColor(voxel_offset + cube_points[6], voxel_colors[i]); // vertex 6
-            vertices[j + 7] = new VertexPositionColor(voxel_offset + cube_points[7], voxel_colors[i]); // vertex 7
+            vertices[j    ] = new VertexPositionColor(voxel_offset + cube_points[0], voxel_color); // vertex 0
+            vertices[j + 1] = new VertexPositionColor(voxel_offset + cube_points[1], voxel_color); // vertex 1
+            vertices[j + 2] = new VertexPositionColor(voxel_offset + cube_points[2], voxel_color); // vertex 2
+            vertices[j + 3] = new VertexPositionColor(voxel_offset + cube_points[3], voxel_color); // vertex 3
+            vertices[j + 4] = new VertexPositionColor(voxel_offset + cube_points[4], voxel_color); // vertex 4
+            vertices[j + 5] = new VertexPositionColor(voxel_offset + cube_points[5], voxel_color); // vertex 5
+            vertices[j + 6] = new VertexPositionColor(voxel_offset + cube_points[6], voxel_color); // vertex 6
+            vertices[j + 7] = new VertexPositionColor(voxel_offset + cube_points[7], voxel_color); // vertex 7
 
             indices[k + 0 ] = (short) (j    ); indices[k + 1 ] = (short) (j + 1); indices[k + 2 ] = (short) (j + 3); // tri 1  top
             indices[k + 3 ] = (short) (j + 2); indices[k + 4 ] = (short) (j    ); indices[k + 5 ] = (short) (j + 3); // tri 2

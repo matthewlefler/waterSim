@@ -27,6 +27,8 @@ public abstract class Camera
     }
     public Quaternion _rotation;
 
+    public float speed = 1f;
+
     public float field_of_view { get{ return _field_of_view; } set { _field_of_view = value; this.projection_matrix = Matrix.CreatePerspectiveFieldOfView(_field_of_view, _aspect_ratio, 0.01f, 1000f); } }
     private float _field_of_view;
 
@@ -52,7 +54,7 @@ public abstract class Camera
 
     public virtual void Move(Vector3 change)
     {
-        this.position += Vector3.Transform(change, _rotation);
+        this.position += Vector3.Transform(change, this._rotation) * this.speed;
     }
 
     public virtual void Rotate(Quaternion rotation)

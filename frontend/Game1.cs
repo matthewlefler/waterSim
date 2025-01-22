@@ -22,6 +22,18 @@ public class Game1 : Game
     private int screen_y;
     Point screen_middle;
 
+    VertexPositionColor[] origin_axii_lines = new VertexPositionColor[]
+    {
+        new VertexPositionColor(Vector3.Up, Color.Red),
+        new VertexPositionColor(Vector3.Zero, Color.Red),
+        
+        new VertexPositionColor(Vector3.Right, Color.Green),
+        new VertexPositionColor(Vector3.Zero, Color.Green),
+        
+        new VertexPositionColor(Vector3.Forward, Color.Blue),
+        new VertexPositionColor(Vector3.Zero, Color.Blue),
+    };
+
     Texture2D tex;
     BitmapFont font;
 
@@ -43,11 +55,6 @@ public class Game1 : Game
         _graphics.PreferredBackBufferHeight = 1300;
         _graphics.PreferredBackBufferWidth = 1300;
         _graphics.ApplyChanges();
-
-        DepthStencilState depthStencilState = new DepthStencilState();
-        depthStencilState.DepthBufferEnable = true;
-        depthStencilState.DepthBufferFunction = CompareFunction.Greater;
-        GraphicsDevice.DepthStencilState = depthStencilState;
         
         screen_x = _graphics.PreferredBackBufferWidth;
         screen_y = _graphics.PreferredBackBufferHeight;
@@ -86,8 +93,7 @@ public class Game1 : Game
     }
 
 
-    float time = 0;
-    float dt = 0;
+    float dt = 0; // delta time in seconds
 
     MouseState last_mouse = Mouse.GetState();
     MouseState mouse = Mouse.GetState();
@@ -103,8 +109,10 @@ public class Game1 : Game
         last_mouse = mouse;
         mouse = Mouse.GetState();
 
+        Mouse.SetPosition(screen_middle.X, screen_middle.Y); // lock mouse to screen
+
         if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || keyboard.IsKeyDown(Keys.Escape))
-            Exit();
+        { Exit(); }
 
         if(keyboard.IsKeyDown(Keys.W))
         {
@@ -133,14 +141,23 @@ public class Game1 : Game
             camera.Move(Vector3.Up * dt);
         }
 
-        camera.Rotate((last_mouse.X - mouse.X) * dt * 0.3f, (last_mouse.Y - mouse.Y) * dt * 0.3f);
+        if(keyboard.IsKeyDown(Keys.LeftShift))
+        {
+            camera.speed = 3f;
+        }
+        else
+        {
+            camera.speed = 1f;
+        }
+
+        camera.Rotate((screen_middle.X - mouse.X) * dt * 0.2f, (screen_middle.Y - mouse.Y) * dt * 0.2f);
 
 
         if(messenger.connected) 
         {
             messenger.read(sim); 
         }
-        else 
+        else
         { 
             messenger.connect(); 
         }
@@ -155,10 +172,11 @@ public class Game1 : Game
     {
         double frame_rate = 1.0 / gameTime.ElapsedGameTime.TotalSeconds;
         GraphicsDevice.Clear(background_color);
+        GraphicsDevice.DepthStencilState = DepthStencilState.Default;
 
-        _spriteBatch.Begin();
+        _spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.AlphaBlend);
 
-        BasicEffect basicEffect = new BasicEffect(GraphicsDevice); //effect
+        BasicEffect basicEffect = new BasicEffect(GraphicsDevice); //basic effect
         basicEffect.VertexColorEnabled = true;
         basicEffect.AmbientLightColor = new Vector3(0.5f,0.5f,0.5f);
         basicEffect.EmissiveColor = new Vector3(0.5f, 0.5f, 0.5f);
@@ -166,23 +184,11 @@ public class Game1 : Game
         basicEffect.View = camera.view_matrix; //camera projections
         basicEffect.Projection = camera.projection_matrix;
 
-        VertexPositionColor[] lines = new VertexPositionColor[]
-        {
-            new VertexPositionColor(Vector3.Up, Color.Red),
-            new VertexPositionColor(Vector3.Zero, Color.Red),
-            
-            new VertexPositionColor(Vector3.Right, Color.Green),
-            new VertexPositionColor(Vector3.Zero, Color.Green),
-            
-            new VertexPositionColor(Vector3.Forward, Color.Blue),
-            new VertexPositionColor(Vector3.Zero, Color.Blue),
-        };
-
         foreach (EffectPass pass in basicEffect.CurrentTechnique.Passes)
         {
             pass.Apply();
 
-            GraphicsDevice.DrawUserPrimitives(PrimitiveType.LineList, lines, 0, 3);
+            GraphicsDevice.DrawUserPrimitives(PrimitiveType.LineList, origin_axii_lines, 0, 3);
         }
         
         if(sim.voxelObject is not null & sim.voxelObject.vertices.Length > 0)
@@ -191,8 +197,6 @@ public class Game1 : Game
         }
 
         _spriteBatch.DrawString(font, frame_rate.ToString(), Vector2.One, Color.WhiteSmoke, 0, Vector2.Zero, 0.3f, SpriteEffects.None, 0f);
-        _spriteBatch.DrawString(font, camera.position.ToString(), Vector2.UnitY * 30, Color.WhiteSmoke, 0, Vector2.Zero, 0.3f, SpriteEffects.None, 0f);
-        _spriteBatch.DrawString(font, camera.rotation.ToString(), Vector2.UnitY * 60, Color.WhiteSmoke, 0, Vector2.Zero, 0.3f, SpriteEffects.None, 0f);
 
         _spriteBatch.End();
         base.Draw(gameTime);

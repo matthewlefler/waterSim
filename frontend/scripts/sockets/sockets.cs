@@ -259,7 +259,7 @@ public class Messenger
 
             sim_data[j] = temp;
         }
-
+        
         sim.SetData(sim_data, this.simWidth, this.simHeight, this.simDepth);
     }
 

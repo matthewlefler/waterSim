@@ -57,16 +57,18 @@ class EchoConnection: public Poco::Net::TCPServerConnection
 
         int width;
         int height;
+        int depth;
 
         char iter = 'a';
 
     public:
-        EchoConnection(const Poco::Net::StreamSocket& s, std::atomic<DATATYPE*>* pointer_to_arr_pointer, int width, int height): TCPServerConnection(s) 
+        EchoConnection(const Poco::Net::StreamSocket& s, std::atomic<DATATYPE*>* pointer_to_arr_pointer, int width, int height, int depth): TCPServerConnection(s) 
         {
             this->arr = pointer_to_arr_pointer;
-            this->arr_len = width * height;
+            this->arr_len = width * height * depth;
             this->width = width;
             this->height = height;
+            this->depth = depth;
             this->size_of_arr_len = sizeof(arr_len);
 
             this->size_of_data_type = sizeof(DATATYPE);
@@ -101,7 +103,7 @@ class EchoConnection: public Poco::Net::TCPServerConnection
                     std::memcpy(&send_buffer[3], &arr_len, size_of_arr_len);
 
                     ss.sendBytes(&send_buffer, 1024); // has to match the receiveing buffer for the header msg in the receiver 
-                                                      // as it is possible that if different the socket will read into the data and delete some data and offset the rest of the data
+                                                      // as it is possible that if different the socket will read into the data and "delete" some data and offset the rest of the data
 
                     if(send_buffer_length > number_of_bytes_to_send) // if the data an be sent in one send call, do so
                     {
@@ -140,7 +142,7 @@ class EchoConnection: public Poco::Net::TCPServerConnection
 
                     send_buffer[3] = this->width; //width
                     send_buffer[4] = this->height; //height
-                    send_buffer[5] = 5; //depth (unused for now)
+                    send_buffer[5] = this->depth; //depth 
 
                     ss.sendBytes(&send_buffer, 6);
 
@@ -178,18 +180,20 @@ class TCPServerConnectionFactoryTheSecond: public Poco::Net::TCPServerConnection
         std::atomic<DATATYPE*>* arr;
         int width;
         int height;
+        int depth;
 
     public:
-        TCPServerConnectionFactoryTheSecond(std::atomic<DATATYPE*>* arr, int width, int height)
+        TCPServerConnectionFactoryTheSecond(std::atomic<DATATYPE*>* arr, int width, int height, int depth)
         {
             this->arr = arr;
             this->width = width;
             this->height = height;
+            this->depth = depth;
         }
 
         Poco::Net::TCPServerConnection* createConnection(const Poco::Net::StreamSocket& socket)
         {
-            return new EchoConnection(socket, arr, width, height);
+            return new EchoConnection(socket, arr, width, height, depth);
         }
 }; 
 
@@ -200,9 +204,9 @@ class Messenger
 
     public:
 
-    Messenger(Poco::UInt16 port, std::atomic<DATATYPE*>* arr, int width, int height)
+    Messenger(Poco::UInt16 port, std::atomic<DATATYPE*>* arr, int width, int height, int depth)
     {
-        server = new Poco::Net::TCPServer(new TCPServerConnectionFactoryTheSecond(arr, width, height), port);
+        server = new Poco::Net::TCPServer(new TCPServerConnectionFactoryTheSecond(arr, width, height, depth), port);
         server->start();
 
         std::cout << "starting server at address: " << server->socket().address().toString() << " | with a send_buffer size of: " << send_buffer_length << " bytes " << "\n";

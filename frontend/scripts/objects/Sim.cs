@@ -1,6 +1,8 @@
+using System;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography.X509Certificates;
+using System.Threading;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -69,8 +71,9 @@ public class Simulation
 
         for (int i = 0; i < this.cells.Length; i++)
         {
-            colors[i] = new Color(this.cells[i].X, this.cells[i].Y, this.cells[i].W);
+            colors[i] = new Color( this.cells[i].W, this.cells[i].W, this.cells[i].W);
             positions[i] = this.Get3DPositionVec(i);
+            //Console.WriteLine(i + ": " + colors[i] + " pos: " + positions[i] + " sent pos: " + this.cells[i].X + ", " + this.cells[i].Y + ", " + this.cells[i].Z + ", " + this.cells[i].W);
         }
 
         this.voxelObject.SetData(positions, colors);
@@ -78,12 +81,12 @@ public class Simulation
 
     public (int x, int y, int z) Get3DPosition(int index)
     {
-        return (index % width, (index / height) % (width * height), index % (width * height));
-    }  
+        return (index % width, index / width % height, index / (width * height));
+    } 
 
     public Vector3 Get3DPositionVec(int index)
     {
-        return new Vector3(index % width, (index / height) % (width * height), index % (width * height));
+        return new Vector3(index % width, index / width % height, index / (width * height));
     }  
 
     public int GetIndex(int x, int y, int z)

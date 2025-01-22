@@ -19,63 +19,40 @@
 #include<sycl/sycl.hpp>
 using namespace sycl;
 
-float round(float value, int places)
-{
-    float mult = sycl::_V1::pow(10.0f, (float)places);
-    float newValue = (float) sycl::_V1::floor(value * mult) / mult;
-    return newValue;
-}
-
 int main()
 {
     // set up memory
     // initilize the simulation
     Simulation sim(10, 10, 10);
 
-    Messenger messenger = Messenger(4331, &sim.vectors, *sim.pWidth, *sim.pHeight);
+    //Messenger messenger = Messenger(4331, &sim.vectors, *sim.pWidth, *sim.pHeight, *sim.pDepth);
 
-    std::cout << *sim.pWidth << " " << *sim.pHeight << " " << *sim.pTotalLength << " " << *sim.pDepth << "\n";
+    std::cout << *sim.pWidth << " " << *sim.pHeight << " " << *sim.pDepth << " " << *sim.pAmtOfCells << "\n";
 
     // print the beginning state of the vectors (for testing purposes)
-    // also assign them a value of their index followed by three zeros
-    for (int i = 0; i < *sim.pTotalLength; ++i)
+    // also assign them a value of their position followed by rand % 2
+    for (int i = 0; i < *sim.pAmtOfCells; ++i)
     {
-        int x = i % *sim.pWidth;
-        int y = i / *sim.pHeight;
+        int x = sim.getXPos(i);
+        int y = sim.getYPos(i);
+        int z = sim.getZPos(i);
 
-        sim.vectors[i] = float4(x, y, i, rand() % 2);
+        sim.vectors[i] = float4(x, y, z, rand() % 2);
     }
+    std::cout << "set vectors \n";
 
     sim.send();
+    std::cout << "sent vectors to device \n";
 
-
-    int count  = 0;
+    int count = 0;
     bool exit = false;
     while(true)
     {
-        sim.next_frame(1.0f);
-        //sim.print();
+        std::cout << "here0?\n"; 
 
-        // for(int i = 0; i < *sim.pTotalLength; i++)
-        // {
-        //     std::cout << (int) *(static_cast<std::byte*>(static_cast<void*>(&sim.vectors[i])) + 0) << " ";
-        //     std::cout << (int) *(static_cast<std::byte*>(static_cast<void*>(&sim.vectors[i])) + 1) << " ";
-        //     std::cout << (int) *(static_cast<std::byte*>(static_cast<void*>(&sim.vectors[i])) + 2) << " ";
-        //     std::cout << (int) *(static_cast<std::byte*>(static_cast<void*>(&sim.vectors[i])) + 3) << " ";
-        //     std::cout << (int) *(static_cast<std::byte*>(static_cast<void*>(&sim.vectors[i].y())) + 0) << " ";
-        //     std::cout << (int) *(static_cast<std::byte*>(static_cast<void*>(&sim.vectors[i].y())) + 1) << " ";
-        //     std::cout << (int) *(static_cast<std::byte*>(static_cast<void*>(&sim.vectors[i].y())) + 2) << " ";
-        //     std::cout << (int) *(static_cast<std::byte*>(static_cast<void*>(&sim.vectors[i].y())) + 3) << " ";
-        //     std::cout << (int) *(static_cast<std::byte*>(static_cast<void*>(&sim.vectors[i].z())) + 0) << " ";
-        //     std::cout << (int) *(static_cast<std::byte*>(static_cast<void*>(&sim.vectors[i].z())) + 1) << " ";
-        //     std::cout << (int) *(static_cast<std::byte*>(static_cast<void*>(&sim.vectors[i].z())) + 2) << " ";
-        //     std::cout << (int) *(static_cast<std::byte*>(static_cast<void*>(&sim.vectors[i].z())) + 3) << " ";
-        //     std::cout << (int) *(static_cast<std::byte*>(static_cast<void*>(&sim.vectors[i].w())) + 0) << " ";
-        //     std::cout << (int) *(static_cast<std::byte*>(static_cast<void*>(&sim.vectors[i].w())) + 1) << " ";
-        //     std::cout << (int) *(static_cast<std::byte*>(static_cast<void*>(&sim.vectors[i].w())) + 2) << " ";
-        //     std::cout << (int) *(static_cast<std::byte*>(static_cast<void*>(&sim.vectors[i].w())) + 3) << " ";
-        // }
-        // std::cout << "\n\n";
+        sim.next_frame(1.0f);
+        std::cout << "frame: " << count << "\n";
+        //sim.print();
 
         if(count > 200) { exit = true; }
 
