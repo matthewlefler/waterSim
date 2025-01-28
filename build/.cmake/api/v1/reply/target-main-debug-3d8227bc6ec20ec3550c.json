@@ -35,19 +35,19 @@
 			{
 				"command" : 0,
 				"file" : 0,
-				"line" : 12,
+				"line" : 13,
 				"parent" : 0
 			},
 			{
 				"command" : 1,
 				"file" : 0,
-				"line" : 18,
+				"line" : 19,
 				"parent" : 0
 			},
 			{
 				"command" : 4,
 				"file" : 0,
-				"line" : 17,
+				"line" : 18,
 				"parent" : 0
 			},
 			{
@@ -120,7 +120,10 @@
 			"compileCommandFragments" : 
 			[
 				{
-					"fragment" : "-fsycl"
+					"fragment" : "-g -Rno-debug-disables-optimization"
+				},
+				{
+					"fragment" : "-fsycl -g"
 				}
 			],
 			"defines" : 
@@ -144,6 +147,10 @@
 				{
 					"backtrace" : 2,
 					"define" : "UTF8PROC_STATIC"
+				},
+				{
+					"backtrace" : 2,
+					"define" : "_DEBUG"
 				},
 				{
 					"backtrace" : 2,
@@ -179,7 +186,11 @@
 		"commandFragments" : 
 		[
 			{
-				"fragment" : "-fsycl",
+				"fragment" : "-g -Rno-debug-disables-optimization",
+				"role" : "flags"
+			},
+			{
+				"fragment" : "-fsycl -g",
 				"role" : "flags"
 			},
 			{

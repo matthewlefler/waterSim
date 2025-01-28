@@ -5,9 +5,10 @@ cmake_minimum_required(VERSION 3.10)
 
 project(waterSim CXX)
 
+set(CMAKE_BUILD_TYPE "debug")
 
-set(COMPILE_FLAGS "-fsycl")
-set(LINK_FLAGS "-fsycl")
+set(COMPILE_FLAGS "-fsycl -g")
+set(LINK_FLAGS "-fsycl -g")
 
 add_executable(main src/main.cpp)
 

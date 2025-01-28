@@ -23,35 +23,35 @@ int main()
 {
     // set up memory
     // initilize the simulation
-    Simulation sim(10, 10, 10);
+    Simulation sim(3, 3, 3);
+    
+    Messenger messenger = Messenger(4331, sim.vectors, *sim.pWidth, *sim.pHeight, *sim.pDepth);
 
-    //Messenger messenger = Messenger(4331, &sim.vectors, *sim.pWidth, *sim.pHeight, *sim.pDepth);
+    std::cout << "width: " << *sim.pWidth << " height: " << *sim.pHeight << " depth: " << *sim.pDepth << " total number of cells: " << *sim.pAmtOfCells << "\n";
 
-    std::cout << *sim.pWidth << " " << *sim.pHeight << " " << *sim.pDepth << " " << *sim.pAmtOfCells << "\n";
-
-    // print the beginning state of the vectors (for testing purposes)
-    // also assign them a value of their position followed by rand % 2
+    // assign the stating value of the simulation
     for (int i = 0; i < *sim.pAmtOfCells; ++i)
     {
         int x = sim.getXPos(i);
         int y = sim.getYPos(i);
         int z = sim.getZPos(i);
 
-        sim.vectors[i] = float4(x, y, z, rand() % 2);
+        sim.vectors[i] = float4(0.0f, 2.5f, 1.0f, 1.0f);
+
+        if(y == 0)
+        {
+            sim.vectors[i].w() = 0.0f;
+        }
     }
-    std::cout << "set vectors \n";
 
     sim.send();
-    std::cout << "sent vectors to device \n";
 
     int count = 0;
     bool exit = false;
     while(true)
     {
-        std::cout << "here0?\n"; 
-
-        sim.next_frame(1.0f);
         std::cout << "frame: " << count << "\n";
+        sim.next_frame(1.0f);
         //sim.print();
 
         if(count > 200) { exit = true; }

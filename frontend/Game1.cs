@@ -152,7 +152,6 @@ public class Game1 : Game
 
         camera.Rotate((screen_middle.X - mouse.X) * dt * 0.2f, (screen_middle.Y - mouse.Y) * dt * 0.2f);
 
-
         if(messenger.connected) 
         {
             messenger.read(sim); 
@@ -197,6 +196,8 @@ public class Game1 : Game
         }
 
         _spriteBatch.DrawString(font, frame_rate.ToString(), Vector2.One, Color.WhiteSmoke, 0, Vector2.Zero, 0.3f, SpriteEffects.None, 0f);
+
+        _spriteBatch.DrawString(font, sim.cells[0].ToString(), new Vector2(1, 30), Color.WhiteSmoke, 0, Vector2.Zero, 0.3f, SpriteEffects.None, 0f);
 
         _spriteBatch.End();
         base.Draw(gameTime);

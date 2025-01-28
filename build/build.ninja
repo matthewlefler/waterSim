@@ -12,7 +12,7 @@
 
 # =============================================================================
 # Project: waterSim
-# Configurations: 
+# Configurations: debug
 # =============================================================================
 
 #############################################
@@ -20,6 +20,11 @@
 
 ninja_required_version = 1.5
 
+
+#############################################
+# Set configuration variable for custom commands.
+
+CONFIGURATION = debug
 # =============================================================================
 # Include auxiliary files.
 
@@ -44,10 +49,10 @@ cmake_ninja_workdir = /home/lefler/Documents/gitRepos/waterSim/build/
 
 build cmake_object_order_depends_target_main: phony || CMakeFiles/main.dir
 
-build CMakeFiles/main.dir/src/main.cpp.o: CXX_COMPILER__main_unscanned_ /home/lefler/Documents/gitRepos/waterSim/backend/src/main.cpp || cmake_object_order_depends_target_main
-  DEFINES = -DPOCO_ENABLE_CPP11 -DPOCO_ENABLE_CPP14 -DPOCO_HAVE_FD_EPOLL -DPOCO_OS_FAMILY_UNIX -DUTF8PROC_STATIC -D_FILE_OFFSET_BITS=64 -D_LARGEFILE64_SOURCE -D_REENTRANT -D_THREAD_SAFE -D_XOPEN_SOURCE=500
+build CMakeFiles/main.dir/src/main.cpp.o: CXX_COMPILER__main_unscanned_debug /home/lefler/Documents/gitRepos/waterSim/backend/src/main.cpp || cmake_object_order_depends_target_main
+  DEFINES = -DPOCO_ENABLE_CPP11 -DPOCO_ENABLE_CPP14 -DPOCO_HAVE_FD_EPOLL -DPOCO_OS_FAMILY_UNIX -DUTF8PROC_STATIC -D_DEBUG -D_FILE_OFFSET_BITS=64 -D_LARGEFILE64_SOURCE -D_REENTRANT -D_THREAD_SAFE -D_XOPEN_SOURCE=500
   DEP_FILE = CMakeFiles/main.dir/src/main.cpp.o.d
-  FLAGS = -fsycl
+  FLAGS = -g -Rno-debug-disables-optimization -fsycl -g
   OBJECT_DIR = CMakeFiles/main.dir
   OBJECT_FILE_DIR = CMakeFiles/main.dir/src
   TARGET_COMPILE_PDB = CMakeFiles/main.dir/
@@ -61,8 +66,9 @@ build CMakeFiles/main.dir/src/main.cpp.o: CXX_COMPILER__main_unscanned_ /home/le
 #############################################
 # Link the executable main
 
-build main: CXX_EXECUTABLE_LINKER__main_ CMakeFiles/main.dir/src/main.cpp.o | /usr/local/lib/libPocoNet.so.110 /usr/local/lib/libPocoFoundation.so.110
-  LINK_FLAGS = -fsycl
+build main: CXX_EXECUTABLE_LINKER__main_debug CMakeFiles/main.dir/src/main.cpp.o | /usr/local/lib/libPocoNet.so.110 /usr/local/lib/libPocoFoundation.so.110
+  FLAGS = -g -Rno-debug-disables-optimization
+  LINK_FLAGS = -fsycl -g
   LINK_LIBRARIES = -Wl,-rpath,/usr/local/lib  /usr/local/lib/libPocoNet.so.110  /usr/local/lib/libPocoFoundation.so.110  -lpthread  -ldl  -lrt
   OBJECT_DIR = CMakeFiles/main.dir
   POST_BUILD = :

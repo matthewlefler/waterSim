@@ -17,10 +17,23 @@
 #include<sycl/sycl.hpp>
 using namespace sycl;
 
+//<-- TEMPERARY DEBUGGING FUNCTION !-->
+// Our simple asynchronous handler function
+auto handle_async_error = [](exception_list elist) {
+  for (auto &e : elist) {
+    try{ std::rethrow_exception(e); }
+    catch ( sycl::exception& e ) {
+       // Print information about the asynchronous exception
+    }
+  }
+  // Terminate abnormally to make clear to user
+  // that something unhandled happened
+  std::terminate();
+};
 
 /*
  * the simulation is made up of 3d cells (or voxels if you want to think of it that way) that has a static size
-* the simulation works in three steps that are done for each call of the next_frame function 
+ * the simulation works in three steps that are done for each call of the next_frame function 
  * 
  * 1. modify velocity values
  *      add any external forces such as gravity 
@@ -65,7 +78,7 @@ class Simulation
         float* deviceDensityArr; // device arr 2 and has length equal to arrLen 
         
         // the divergence of the velocities of a cell are mutiplied by this, it helps to keep the simulation from collapsing
-        float overRelax = 1.9f;
+        const float overRelax = 1.0f;
         float* deviceOverRelax; // overrelax value stored on device
 
         float4* velocityVectors; // private host velocity array
@@ -79,14 +92,15 @@ class Simulation
         const int* const pVelocityArrLen = &arrLen;
 
         //x and y and z velocity vector components + w for ability of that velocity to change 
-        std::atomic<float4*> vectors;
+        float4* vectors;
         // densities, one per individual cell
-        std::atomic<float*> densities;
+        float* densities;
 
     //constructor
     Simulation(int width, int height, int depth)
     {
-        this->q = queue(cpu_selector_v);
+        this->q = queue(handle_async_error);
+        std::cout << "running simulation on -> " << q.get_device().get_info<info::device::name>() << std::endl;
 
         this->height = height;
         this->width = width;
@@ -102,17 +116,17 @@ class Simulation
 
 
         // allocate enough space in the device for the array of vectors
-        this->deviceVelocityArr = malloc_device<float4>(this->arrLen, q);
+        this->deviceVelocityArr = malloc_device<float4>(this->arrLen * sizeof(float4), q);
 
         // allocate enough space in the device for the array of densities
-        this->deviceDensityArr = malloc_device<float>(this->arrLen, q);
+        this->deviceDensityArr = malloc_device<float>(this->arrLen * sizeof(float), q);
 
         // allocate space for the width, height, and depth integers
-        this->deviceWidth = malloc_device<int>(1, this->q); 
-        this->deviceHeight = malloc_device<int>(1, this->q);
-        this->deviceDepth = malloc_device<int>(1, this->q);
+        this->deviceWidth = malloc_device<int>(sizeof(int), this->q); 
+        this->deviceHeight = malloc_device<int>(sizeof(int), this->q);
+        this->deviceDepth = malloc_device<int>(sizeof(int), this->q);
 
-        this->deviceOverRelax = malloc_device<float>(1, this->q);
+        this->deviceOverRelax = malloc_device<float>(sizeof(float), this->q);
 
         // copy vectors to the device
         this->q.submit([&](handler& h) {
@@ -198,42 +212,62 @@ class Simulation
             h.memcpy(this->deviceOverRelax, &this->overRelax, sizeof(float));
         });
 
-        this->q.wait(); // wait for all operations to complete
+        q.wait(); // wait for all operations to complete
     }
 
     void next_frame(float dt)
     {
         float4* velocityArray = this->deviceVelocityArr;
         float* densityArray = this->deviceDensityArr;
-                std::cout << "here"; 
                 
         int* pWidth = deviceWidth;
         int* pHeight = deviceHeight;
         int* pDepth = deviceDepth;
-                std::cout << "here1"; 
 
         float* pOverRelax = deviceOverRelax;
-        std::cout << "here2"; 
 
-        //do the math
-        event modifyVelocityValues = this->q.submit([&](handler& h) 
+        // do the math
+        event modifyVelocityValues = 
+        this->q.submit([&](handler& h) 
         {
             h.parallel_for(this->arrLen, [=](id<1> i) 
             {
-                velocityArray[i].y() -= 9.8f * dt * velocityArray[i].w();
+                velocityArray[i].y() -= 1.0f * dt * velocityArray[i].w();
+
+                int width = *pWidth;
+                int height = *pHeight;
+                int depth = *pDepth;
+
+                int x = i % (width - 1);
+                int y = (i / (width - 1)) % (height - 1);
+                int z = i / ((width - 1) * (height - 1));
+
+                if(y == 0)
+                {
+                    velocityArray[i].x() = 0.0f;
+                    velocityArray[i].y() = 0.0f;
+                    velocityArray[i].z() = 0.0f;
+                } 
             });
         });
 
-        event projection = this->q.submit([&](handler& h) 
+
+        event projection = 
+        this->q.submit([&](handler& h) 
         {
             h.depends_on(modifyVelocityValues);
 
             /**
-             * this is an idea i am testing 
+             * this is an idea that is being testing 
              * taking the projection method from the 10 minute physics video: https://www.youtube.com/watch?v=iKAVRgIrUOU&t=27s
              * where there are velocities at the edges of 2d squares and the fluid moving in and out of the squares has to be equal
-             * and applying it to a 3d grid of cells where the velocity components are at the center,
-             * by taking every in between cube of 8 velocities and making their velocities match so that the sum of their vectors results in only curl/rotation and no inward/outward force 
+             * and applying it to a 3d grid of cells where the velocity components are at the center.
+             * 
+             * by taking every in between cube of 8 velocities and making their velocities match so that the sum of their vectors results in a vector of zero length, 
+             * meaning no fluid is moving in or out. 
+             * 
+             * currently does not work, vectors are being infinitly mutiplied/added to and result in massive velocities that do not make sense in the given context
+             * TODO: fix it duh
              */
             h.parallel_for((this->width - 1) * (this->height - 1) * (this->depth - 1), [=](id<1> i) 
             { 
@@ -243,9 +277,10 @@ class Simulation
 
                 float overRelax = *pOverRelax;
 
+                
                 int x = i % (width - 1);
                 int y = (i / (width - 1)) % (height - 1);
-                int z = i % ((width - 1) * (height - 1)); 
+                int z = i / ((width - 1) * (height - 1)); 
 
                 // x y z
                 
@@ -269,7 +304,7 @@ class Simulation
                  *   | /   | /
                  *   |/____|/
                  *   1     2
-                */
+                 */
 
                 float4 velocity1 = velocityArray[x     + (y       * height) + (z       * width * height)];
                 float4 velocity2 = velocityArray[x + 1 + (y       * height) + (z       * width * height)];
@@ -283,7 +318,7 @@ class Simulation
                 // the projection of magnitude of the vector u when vector u is projected on to vector v is:
                 // (vector u dotproduct vector v) divided by the magnitude of vector v
 
-                // magnitude of the vectors projected on to a vector going through the middle of the 8 positions, and the nth position
+                // magnitude of the vectors projected onto a vector going through the middle of the 8 positions, and the nth position
                 float out1 = ((velocity1.x() * -1) + (velocity1.y() * -1) + (velocity1.z() * -1)) / sycl::_V1::sqrt(3.0f); 
                 float out2 = ((velocity2.x() *  1) + (velocity2.y() * -1) + (velocity2.z() * -1)) / sycl::_V1::sqrt(3.0f);
                 float out3 = ((velocity3.x() * -1) + (velocity3.y() *  1) + (velocity3.z() * -1)) / sycl::_V1::sqrt(3.0f);
@@ -293,38 +328,62 @@ class Simulation
                 float out7 = ((velocity7.x() *  1) + (velocity7.y() *  1) + (velocity7.z() * -1)) / sycl::_V1::sqrt(3.0f);
                 float out8 = ((velocity8.x() *  1) + (velocity8.y() *  1) + (velocity8.z() *  1)) / sycl::_V1::sqrt(3.0f);
 
-                // not equal to but proportional to the actual amount of outflow
+                // // not equal to but proportional to the actual amount of outflow
                 float divergence = out1 + out2 + out3 + out4 + out5 + out6 + out7 + out8;
-                divergence *= overRelax;
+                divergence = divergence * overRelax;
 
-                velocityArray[x     + (y       * height) + (z       * width * height)] = velocity1 + (float4(-divergence, -divergence, -divergence, 0) * velocity1.w());
-                velocityArray[x + 1 + (y       * height) + (z       * width * height)] = velocity2 + (float4( divergence, -divergence, -divergence, 0) * velocity2.w());
-                velocityArray[x     + ((y + 1) * height) + (z       * width * height)] = velocity3 + (float4(-divergence,  divergence, -divergence, 0) * velocity3.w());
-                velocityArray[x     + (y       * height) + ((z + 1) * width * height)] = velocity4 + (float4(-divergence, -divergence,  divergence, 0) * velocity4.w());
-                velocityArray[x     + ((y + 1) * height) + ((z + 1) * width * height)] = velocity5 + (float4(-divergence,  divergence,  divergence, 0) * velocity5.w());
-                velocityArray[x + 1 + (y       * height) + ((z + 1) * width * height)] = velocity6 + (float4( divergence, -divergence,  divergence, 0) * velocity6.w());
-                velocityArray[x + 1 + ((y + 1) * height) + (z       * width * height)] = velocity7 + (float4( divergence,  divergence, -divergence, 0) * velocity7.w());
-                velocityArray[x + 1 + ((y + 1) * height) + ((z + 1) * width * height)] = velocity8 + (float4( divergence,  divergence,  divergence, 0) * velocity8.w());
+                float velocity1change = 1.0f/8.0f * 1.0f/7.0f * (                velocity2.w() + velocity3.w() + velocity4.w() + velocity5.w() + velocity6.w() + velocity7.w() + velocity8.w());
+                float velocity2change = 1.0f/8.0f * 1.0f/7.0f * (velocity1.w() +                 velocity3.w() + velocity4.w() + velocity5.w() + velocity6.w() + velocity7.w() + velocity8.w());
+                float velocity3change = 1.0f/8.0f * 1.0f/7.0f * (velocity1.w() + velocity2.w() +                 velocity4.w() + velocity5.w() + velocity6.w() + velocity7.w() + velocity8.w());
+                float velocity4change = 1.0f/8.0f * 1.0f/7.0f * (velocity1.w() + velocity2.w() + velocity3.w() +                 velocity5.w() + velocity6.w() + velocity7.w() + velocity8.w());
+                float velocity5change = 1.0f/8.0f * 1.0f/7.0f * (velocity1.w() + velocity2.w() + velocity3.w() + velocity4.w() +                 velocity6.w() + velocity7.w() + velocity8.w());
+                float velocity6change = 1.0f/8.0f * 1.0f/7.0f * (velocity1.w() + velocity2.w() + velocity3.w() + velocity4.w() + velocity5.w() +                 velocity7.w() + velocity8.w());
+                float velocity7change = 1.0f/8.0f * 1.0f/7.0f * (velocity1.w() + velocity2.w() + velocity3.w() + velocity4.w() + velocity5.w() + velocity6.w() +                 velocity8.w());
+                float velocity8change = 1.0f/8.0f * 1.0f/7.0f * (velocity1.w() + velocity2.w() + velocity3.w() + velocity4.w() + velocity5.w() + velocity6.w() + velocity7.w()                );
+
+                velocityArray[x     + (y       * height) + (z       * width * height)] = velocity1 + (float4(-divergence, -divergence, -divergence, 0) * velocity1change * velocity1.w());
+                velocityArray[x + 1 + (y       * height) + (z       * width * height)] = velocity2 + (float4( divergence, -divergence, -divergence, 0) * velocity2change * velocity2.w());
+                velocityArray[x     + ((y + 1) * height) + (z       * width * height)] = velocity3 + (float4(-divergence,  divergence, -divergence, 0) * velocity3change * velocity3.w());
+                velocityArray[x     + (y       * height) + ((z + 1) * width * height)] = velocity4 + (float4(-divergence, -divergence,  divergence, 0) * velocity4change * velocity4.w());
+                velocityArray[x     + ((y + 1) * height) + ((z + 1) * width * height)] = velocity5 + (float4(-divergence,  divergence,  divergence, 0) * velocity5change * velocity5.w());
+                velocityArray[x + 1 + (y       * height) + ((z + 1) * width * height)] = velocity6 + (float4( divergence, -divergence,  divergence, 0) * velocity6change * velocity6.w());
+                velocityArray[x + 1 + ((y + 1) * height) + (z       * width * height)] = velocity7 + (float4( divergence,  divergence, -divergence, 0) * velocity7change * velocity7.w());
+                velocityArray[x + 1 + ((y + 1) * height) + ((z + 1) * width * height)] = velocity8 + (float4( divergence,  divergence,  divergence, 0) * velocity8change * velocity8.w());
             });
         });
+        
 
-        event advection = this->q.submit([&](handler& h) 
+        event advection = 
+        this->q.submit([&](handler& h) 
         {
             h.depends_on(projection);
+
             h.parallel_for(this->arrLen, [=](id<1> i) 
             {
                 int width = *pWidth;
                 int height = *pHeight;
                 int depth = *pDepth;
 
-                int x = i % (width - 1);
-                int y = (i / (width - 1)) % (height - 1);
-                int z = i % ((width - 1) * (height - 1));
+                int x = i % width;
+                int y = (i / width) % height;
+                int z = i / (width * height);
 
-                float previousX = sycl::_V1::remainder((float) x - (velocityArray[i].x() * dt), (float) width); // position to grab values from, over/under flow positions wrap around 
-                float previousY = sycl::_V1::remainder((float) y - (velocityArray[i].y() * dt), (float) height); 
-                float previousZ = sycl::_V1::remainder((float) z - (velocityArray[i].z() * dt), (float) depth);
-                
+                float previousX = x - (velocityArray[i].x() * dt); // position to grab values from, over/under flow positions wrap around 
+                float previousY = y - (velocityArray[i].y() * dt); 
+                float previousZ = z - (velocityArray[i].z() * dt);
+
+                // previousX = previousX - (width - 1)  * sycl::_V1::floor(previousX / (width - 1)); // mod so that they are within the range: (0 to width)
+                // previousY = previousY - (height - 1) * sycl::_V1::floor(previousY / (height - 1)); // (0 to height)
+                // previousZ = previousZ - (depth - 1)  * sycl::_V1::floor(previousZ / (depth - 1)); // (0 to depth)
+
+                previousX = sycl::_V1::fmin(previousX, 0);
+                previousY = sycl::_V1::fmin(previousY, 0);
+                previousZ = sycl::_V1::fmin(previousZ, 0);
+
+                previousX = sycl::_V1::fmax(previousX, width - 1);
+                previousY = sycl::_V1::fmax(previousY, height - 1);
+                previousZ = sycl::_V1::fmax(previousZ, depth - 1);
+
                 //calc the x y z linear interpolation components seperately 
                 int maxX = sycl::_V1::ceil(previousX);
                 int maxY = sycl::_V1::ceil(previousY);
@@ -338,7 +397,7 @@ class Simulation
                 float zDec = previousZ - sycl::_V1::floor(previousZ); // decimal component of previousZ
 
                 //trilinear interpolated velocity value
-                velocityArray[i] += (
+                velocityArray[i] = (
                 (
                 (velocityArray[minX + minY * height + minZ * width * height] * (yDec) + velocityArray[minX + maxY * height + minZ * width * height] * (1-yDec)) * (xDec) +
                 (velocityArray[maxX + minY * height + minZ * width * height] * (yDec) + velocityArray[maxX + maxY * height + minZ * width * height] * (1-yDec)) * (1-xDec)
@@ -349,20 +408,24 @@ class Simulation
                 (velocityArray[maxX + minY * height + maxZ * width * height] * (yDec) + velocityArray[maxX + maxY * height + maxZ * width * height] * (1-yDec)) * (1-xDec)
                 ) 
                 * (1-zDec));
+
+                //out << i << ": " << velocityArray[i].x() << " " << velocityArray[i].y() << " " << velocityArray[i].z() << " " << velocityArray[i].w() << " | ";
             });
         }); 
 
-        //then copy it back to the vectors host array
+
+        // then copy it back to the vectors host array
         this->q.submit([&](handler& h) 
         {
             h.depends_on(advection);
+
             h.memcpy(this->velocityVectors, deviceVelocityArr, this->arrLen * sizeof(float4));
         });
 
         this->q.wait();
     }
 
-    //TODO: fix this function somehow
+    // TODO: fix this function somehow
     void printVelocities()
     {
         std::cout << "sim print: "; 
@@ -392,3 +455,4 @@ class Simulation
         return x + (y * this->height) + (z * this->width * this->height);
     }
 };
+

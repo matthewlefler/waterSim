@@ -70,71 +70,45 @@ public class Messenger
             Console.WriteLine("Will connect to: " + IPAddress.Loopback.ToString() + " and port: " + port.ToString());
             this.ipAddr = IPAddress.Loopback;
             this.endPoint = new IPEndPoint(ipAddr, port);
+
+            // Creation UDP/IP Socket using 
+            // Socket Class Constructor
+            this.socket = new Socket(this.ipAddr.AddressFamily,
+                       SocketType.Stream, ProtocolType.Tcp);   //<--- tcp and type
     }
 
     /// <summary>
     /// try to connect to the port and address set when initializing this messenger
     /// </summary>
     public void connect()
-    {
+    {    
         try {
-            // Creation UDP/IP Socket using 
-            // Socket Class Constructor
-            this.socket = new Socket(this.ipAddr.AddressFamily,
-                       SocketType.Stream, ProtocolType.Tcp);                       //<--- tcp and type
-    
-            try {
 
-                // Connect Socket to the remote 
-                // endpoint using method Connect()
-                this.socket.Connect(this.endPoint);
-    
-                // We print EndPoint information 
-                // that we are connected
-                Console.WriteLine("Socket connected to -> {0} ",
-                              this.socket.RemoteEndPoint.ToString());
+            // Connect Socket to the remote 
+            // endpoint using method Connect()
+            this.socket.Connect(this.endPoint);
 
-                int byteSent = this.socket.Send(getData);
-    
-                // Data buffer
-                byte[] messageReceived = new byte[1024];
-    
-                // We receive the message using 
-                // the method Receive(). This 
-                // method returns number of bytes
-                // received, that we'll use to 
-                // convert them to string
-                int byteRecv = this.socket.Receive(messageReceived);
+            int byteSent = this.socket.Send(getData);
 
-                this.simWidth = messageReceived[3];
-                this.simHeight = messageReceived[4];
-                this.simDepth = messageReceived[5];
+            // Data buffer
+            byte[] messageReceived = new byte[1024];
 
-                connected = true;
-                Console.WriteLine($"Messenger connected at {IPAddress.Loopback.ToString()}");
-            }
+            // We receive the message using 
+            // the method Receive(). 
+            int byteRecv = this.socket.Receive(messageReceived);
 
-            // Manage of Socket's Exceptions
-            catch (ArgumentNullException ane) 
-            {
-                // Console.WriteLine("ArgumentNullException : {0}", ane.ToString());
-            }
+            this.simWidth = messageReceived[3];
+            this.simHeight = messageReceived[4];
+            this.simDepth = messageReceived[5];
 
-            catch (SocketException se) 
-            {
-                // Console.WriteLine("SocketException : {0}", se.ToString());
-            }
-
-            catch (Exception e) 
-            {
-                // Console.WriteLine("Unexpected exception : {0}", e.ToString());
-            }
-
+            connected = true;
+            Console.WriteLine($"Messenger connected at {this.socket.RemoteEndPoint.ToString()}");
         }
 
+        // Manage of Socket's Exceptions
         catch (Exception e) 
         {
-            // Console.WriteLine(e.ToString());
+            // continue 
         }
     }
 
@@ -259,7 +233,6 @@ public class Messenger
 
             sim_data[j] = temp;
         }
-        
         sim.SetData(sim_data, this.simWidth, this.simHeight, this.simDepth);
     }
 

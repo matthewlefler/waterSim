@@ -71,7 +71,11 @@ public class Simulation
 
         for (int i = 0; i < this.cells.Length; i++)
         {
-            colors[i] = new Color( this.cells[i].W, this.cells[i].W, this.cells[i].W);
+            float colX = 1 - (1 / (1 + MathF.Abs(this.cells[i].X / 10f))); // 1 - 1/(1 + |x / 10|)
+            float colY = 1 - (1 / (1 + MathF.Abs(this.cells[i].Y / 10f)));
+            float colZ = 1 - (1 / (1 + MathF.Abs(this.cells[i].Z / 10f)));
+
+            colors[i] = new Color( colX, colY, colZ);
             positions[i] = this.Get3DPositionVec(i);
             //Console.WriteLine(i + ": " + colors[i] + " pos: " + positions[i] + " sent pos: " + this.cells[i].X + ", " + this.cells[i].Y + ", " + this.cells[i].Z + ", " + this.cells[i].W);
         }
