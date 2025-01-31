@@ -26,10 +26,13 @@ public abstract class Object
     public abstract void Draw(Effect effect);
 }
 
+/// <summary>
+/// a collection of voxels in any position with a constant size
+/// </summary>
 public class VoxelObject : Object
 {
     public Vector3[] voxel_cube_offsets;
-    public float size;
+    public float voxel_size;
 
     public Color[] voxel_colors; // colors of the voxels
     public VertexPositionColor[] vertices;
@@ -38,7 +41,16 @@ public class VoxelObject : Object
     private VertexBuffer vertex_buffer;
     private IndexBuffer index_buffer;
 
-
+    /// <summary>
+    /// Creates and returns a voxel object
+    /// </summary>
+    /// <param name="position"> The initial position of this object </param>
+    /// <param name="rotation"> The initial rotation of this object </param>
+    /// <param name="voxel_positions"> The array of positions of each voxel </param>
+    /// <param name="voxel_colors"> The color of each voxel, the voxel at 3.2e+10index i will have a color at the corresponding index i in this array </param>
+    /// <param name="voxel_size"> The size of each voxel </param>
+    /// <param name="graphics_device"> The device on which to render the voxels </param>
+    /// <exception cref="System.ArgumentException"></exception>
     public VoxelObject(Vector3 position, Quaternion rotation, 
                        Vector3[] voxel_positions, Color[] voxel_colors, float voxel_size,
                        GraphicsDevice graphics_device)
@@ -46,13 +58,13 @@ public class VoxelObject : Object
     {
         if(voxel_colors.Length != voxel_positions.Length)
         {
-            throw new System.Exception("voxel object creation with voxel colors length not matching voxel positions length");
+            throw new System.ArgumentException("voxel object creation with voxel colors length not matching voxel positions length");
         }
 
         this.voxel_cube_offsets = voxel_positions;
         vertices = new VertexPositionColor[voxel_cube_offsets.Length * 12 * 3]; // 12 triangles * 3 vertex per triangle 
         this.voxel_colors = voxel_colors;
-        this.size = voxel_size;
+        this.voxel_size = voxel_size;
 
         UpdateVertices();
     }
@@ -62,12 +74,12 @@ public class VoxelObject : Object
     /// </summary>
     /// <param name="voxel_positions"></param>
     /// <param name="voxel_colors"></param>
-    /// <exception cref="System.Exception"></exception>
+    /// <exception cref="System.ArgumentException"></exception>
     public void SetData(Vector3[] voxel_positions, Color[] voxel_colors)
     {
         if(voxel_colors.Length != voxel_positions.Length)
         {
-            throw new System.Exception($"voxel object set data, voxel colors length does not match voxel positions length \n positions length: {voxel_positions.Length} colors length: {voxel_colors.Length}");
+            throw new System.ArgumentException($"voxel object set data, voxel colors length does not match voxel positions length \n positions length: {voxel_positions.Length} colors length: {voxel_colors.Length}");
         }
 
         this.voxel_cube_offsets = voxel_positions;
@@ -86,14 +98,14 @@ public class VoxelObject : Object
         this.indices = new short[voxel_cube_offsets.Length * 36];
 
         Vector3[] cube_points = new Vector3[] {
-            (Vector3.Up   + Vector3.Forward  + Vector3.Left ) * size * 0.5f, // vertex 0
-            (Vector3.Up   + Vector3.Forward  + Vector3.Right) * size * 0.5f, // vertex 1
-            (Vector3.Up   + Vector3.Backward + Vector3.Left ) * size * 0.5f, // vertex 2
-            (Vector3.Up   + Vector3.Backward + Vector3.Right) * size * 0.5f, // vertex 3
-            (Vector3.Down + Vector3.Forward  + Vector3.Left ) * size * 0.5f, // vertex 4
-            (Vector3.Down + Vector3.Forward  + Vector3.Right) * size * 0.5f, // vertex 5
-            (Vector3.Down + Vector3.Backward + Vector3.Left ) * size * 0.5f, // vertex 6
-            (Vector3.Down + Vector3.Backward + Vector3.Right) * size * 0.5f, // vertex 7
+            (Vector3.Up   + Vector3.Forward  + Vector3.Left ) * voxel_size * 0.5f, // vertex 0
+            (Vector3.Up   + Vector3.Forward  + Vector3.Right) * voxel_size * 0.5f, // vertex 1
+            (Vector3.Up   + Vector3.Backward + Vector3.Left ) * voxel_size * 0.5f, // vertex 2
+            (Vector3.Up   + Vector3.Backward + Vector3.Right) * voxel_size * 0.5f, // vertex 3
+            (Vector3.Down + Vector3.Forward  + Vector3.Left ) * voxel_size * 0.5f, // vertex 4
+            (Vector3.Down + Vector3.Forward  + Vector3.Right) * voxel_size * 0.5f, // vertex 5
+            (Vector3.Down + Vector3.Backward + Vector3.Left ) * voxel_size * 0.5f, // vertex 6
+            (Vector3.Down + Vector3.Backward + Vector3.Right) * voxel_size * 0.5f, // vertex 7
         };
         /*
          *     0 ______1
@@ -152,6 +164,48 @@ public class VoxelObject : Object
             pass.Apply();
             
             this.graphics_device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, this.indices.Length / 3);
+        }
+    }
+}
+
+public class LineObject : Object
+{
+    private Vector3[] line_points;
+
+    private VertexBuffer vertex_buffer;
+
+    public LineObject(Vector3 position, Quaternion rotation, GraphicsDevice graphics_device) : base(position, rotation, graphics_device)
+    {
+        line_points = [Vector3.Zero, Vector3.Zero];
+    }
+
+    public void SetData(Vector3[] points) 
+    {
+        this.line_points = points;
+
+        UpdateVertices();
+    }
+
+    public void UpdateVertices()
+    {
+        VertexPositionColor[] vertices = new VertexPositionColor[line_points.Length];
+
+        for (int i = 0; i < vertices.Length; i++)
+        {
+            vertices[i] = new VertexPositionColor(line_points[i], Color.BlueViolet);
+        }
+
+        vertex_buffer = new VertexBuffer(graphics_device, VertexPositionColor.VertexDeclaration, line_points.Length, BufferUsage.WriteOnly);
+        vertex_buffer.SetData<VertexPositionColor>(vertices);
+    }
+
+    public override void Draw(Effect effect)
+    {
+        graphics_device.SetVertexBuffer(vertex_buffer);
+
+        foreach(EffectPass pass in effect.CurrentTechnique.Passes) 
+        {
+            graphics_device.DrawPrimitives(PrimitiveType.LineStrip, 0, line_points.Length - 1);
         }
     }
 }

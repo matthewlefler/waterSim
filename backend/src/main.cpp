@@ -12,12 +12,12 @@
 
 #include <string>
 #include <iostream>
+#include <atomic>
 
 ////////////
 //  SYCL  //
 ////////////
 #include<sycl/sycl.hpp>
-using namespace sycl;
 
 int main()
 {
@@ -36,7 +36,7 @@ int main()
         int y = sim.getYPos(i);
         int z = sim.getZPos(i);
 
-        sim.vectors[i] = float4(0.0f, 2.5f, 1.0f, 1.0f);
+        sim.vectors[i] = sycl::_V1::float4(0.0f, 2.5f, 1.0f, 1.0f);
 
         if(y == 0)
         {
@@ -47,16 +47,19 @@ int main()
     sim.send();
 
     int count = 0;
-    bool exit = false;
+    std::atomic<bool> exit = std::atomic<bool>();
+    exit = false;
+
     while(true)
     {
+        // TODO: add proper timing and fps counter for stats
         std::cout << "frame: " << count << "\n";
         sim.next_frame(1.0f);
         //sim.print();
 
         if(count > 200) { exit = true; }
 
-        if(exit)
+        if(exit.load())
         {
             // quit the fun loop
             break;

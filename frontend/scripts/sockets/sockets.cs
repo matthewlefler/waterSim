@@ -106,7 +106,7 @@ public class Messenger
         }
 
         // Manage of Socket's Exceptions
-        catch (Exception e) 
+        catch
         {
             // continue 
         }
@@ -157,7 +157,7 @@ public class Messenger
         {
             byteRecv = this.socket.Receive(buffer);
         }
-        catch (Exception e) 
+        catch
         {
             // Console.WriteLine(e.ToString());
             return;
@@ -204,7 +204,7 @@ public class Messenger
 
                     timeoutCount = 0;
                 }
-                catch (Exception e) 
+                catch
                 {
                     // Console.WriteLine(e.ToString());
                     return;

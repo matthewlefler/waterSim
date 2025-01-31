@@ -33,7 +33,10 @@ auto handle_async_error = [](exception_list elist) {
   std::terminate();
 };
 
-/*
+// TODO: define spacing between cells -> distance per second vs current cells per second
+// TODO: make proper edges -> add .w() component consideration to projection step
+
+/**
  * the simulation is made up of 3d cells (or voxels if you want to think of it that way) that has a static size
  * the simulation works in three steps that are done for each call of the next_frame function 
  * 
@@ -250,6 +253,11 @@ class Simulation
                     velocityArray[i].y() = velocityArray[i+width*height].y() * -1.0f;
                     velocityArray[i].z() = velocityArray[i+width*height].z() * -1.0f;
                 } 
+
+                if(x == 0 || x == width - 1) 
+                {
+                    velocityArray[i].x() = 10.0f;
+                }
             });
         });
 
@@ -268,9 +276,7 @@ class Simulation
              * by taking every in between cube of 8 velocities and making their velocities match so that the sum of their vectors results in a vector of zero length, 
              * meaning no fluid is moving in or out. 
              * 
-             * currently does not work, vectors are being infinitly mutiplied/added to and result in massive velocities that do not make sense in the given context
-             * TODO: fix it duh
-             * https://www.desmos.com/calculator/dned4ekwg8 a graph of a single 2d cell and the math required to balence it  
+             * https://www.desmos.com/calculator/z7quq4qock a graph of a single 2d cell and the math required to balence it  
              */
             h.parallel_for((this->width - 1) * (this->height - 1) * (this->depth - 1), [=](id<1> i) 
             { 
