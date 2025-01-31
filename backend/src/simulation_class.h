@@ -11,6 +11,8 @@
 #include <iostream>
 #include <atomic>
 
+#include "float4_helper_functions.h" // a few helper functions such as dot product, magnitude etc. for the xyz componenets of a float4
+
 ////////////
 //  SYCL  //
 ////////////
@@ -242,11 +244,11 @@ class Simulation
                 int y = (i / (width - 1)) % (height - 1);
                 int z = i / ((width - 1) * (height - 1));
 
-                if(y == 0)
+                if(y == 0 || z == 0 || x == 0 || y == height-1 || z == depth-1 || x == width-1 )
                 {
-                    velocityArray[i].x() = 0.0f;
-                    velocityArray[i].y() = 0.0f;
-                    velocityArray[i].z() = 0.0f;
+                    velocityArray[i].x() = velocityArray[i+width*height].x() * -1.0f;
+                    velocityArray[i].y() = velocityArray[i+width*height].y() * -1.0f;
+                    velocityArray[i].z() = velocityArray[i+width*height].z() * -1.0f;
                 } 
             });
         });
@@ -268,6 +270,7 @@ class Simulation
              * 
              * currently does not work, vectors are being infinitly mutiplied/added to and result in massive velocities that do not make sense in the given context
              * TODO: fix it duh
+             * https://www.desmos.com/calculator/dned4ekwg8 a graph of a single 2d cell and the math required to balence it  
              */
             h.parallel_for((this->width - 1) * (this->height - 1) * (this->depth - 1), [=](id<1> i) 
             { 
@@ -315,40 +318,49 @@ class Simulation
                 float4 velocity7 = velocityArray[x + 1 + ((y + 1) * height) + (z       * width * height)];
                 float4 velocity8 = velocityArray[x + 1 + ((y + 1) * height) + ((z + 1) * width * height)];
 
+                float4 velocity1projection = Projection3d(velocity1, -1, -1, -1);
+                float4 velocity2projection = Projection3d(velocity1,  1, -1, -1);
+                float4 velocity3projection = Projection3d(velocity1, -1,  1, -1);
+                float4 velocity4projection = Projection3d(velocity1, -1, -1,  1);
+                float4 velocity5projection = Projection3d(velocity1, -1,  1,  1);
+                float4 velocity6projection = Projection3d(velocity1,  1, -1,  1);
+                float4 velocity7projection = Projection3d(velocity1,  1,  1, -1);
+                float4 velocity8projection = Projection3d(velocity1,  1,  1,  1);
+
                 // the projection of magnitude of the vector u when vector u is projected on to vector v is:
                 // (vector u dotproduct vector v) divided by the magnitude of vector v
 
                 // magnitude of the vectors projected onto a vector going through the middle of the 8 positions, and the nth position
-                float out1 = ((velocity1.x() * -1) + (velocity1.y() * -1) + (velocity1.z() * -1)) / sycl::_V1::sqrt(3.0f); 
-                float out2 = ((velocity2.x() *  1) + (velocity2.y() * -1) + (velocity2.z() * -1)) / sycl::_V1::sqrt(3.0f);
-                float out3 = ((velocity3.x() * -1) + (velocity3.y() *  1) + (velocity3.z() * -1)) / sycl::_V1::sqrt(3.0f);
-                float out4 = ((velocity4.x() * -1) + (velocity4.y() * -1) + (velocity4.z() *  1)) / sycl::_V1::sqrt(3.0f);
-                float out5 = ((velocity5.x() * -1) + (velocity5.y() *  1) + (velocity5.z() *  1)) / sycl::_V1::sqrt(3.0f);
-                float out6 = ((velocity6.x() *  1) + (velocity6.y() * -1) + (velocity6.z() *  1)) / sycl::_V1::sqrt(3.0f);
-                float out7 = ((velocity7.x() *  1) + (velocity7.y() *  1) + (velocity7.z() * -1)) / sycl::_V1::sqrt(3.0f);
-                float out8 = ((velocity8.x() *  1) + (velocity8.y() *  1) + (velocity8.z() *  1)) / sycl::_V1::sqrt(3.0f);
+                float out1 = magnitude(velocity1projection);
+                float out2 = magnitude(velocity2projection);
+                float out3 = magnitude(velocity3projection);
+                float out4 = magnitude(velocity4projection);
+                float out5 = magnitude(velocity5projection);
+                float out6 = magnitude(velocity6projection);
+                float out7 = magnitude(velocity7projection);
+                float out8 = magnitude(velocity8projection);
 
                 // // not equal to but proportional to the actual amount of outflow
                 float divergence = out1 + out2 + out3 + out4 + out5 + out6 + out7 + out8;
                 divergence = divergence * overRelax;
 
-                float velocity1change = 1.0f/8.0f * 1.0f/7.0f * (                velocity2.w() + velocity3.w() + velocity4.w() + velocity5.w() + velocity6.w() + velocity7.w() + velocity8.w());
-                float velocity2change = 1.0f/8.0f * 1.0f/7.0f * (velocity1.w() +                 velocity3.w() + velocity4.w() + velocity5.w() + velocity6.w() + velocity7.w() + velocity8.w());
-                float velocity3change = 1.0f/8.0f * 1.0f/7.0f * (velocity1.w() + velocity2.w() +                 velocity4.w() + velocity5.w() + velocity6.w() + velocity7.w() + velocity8.w());
-                float velocity4change = 1.0f/8.0f * 1.0f/7.0f * (velocity1.w() + velocity2.w() + velocity3.w() +                 velocity5.w() + velocity6.w() + velocity7.w() + velocity8.w());
-                float velocity5change = 1.0f/8.0f * 1.0f/7.0f * (velocity1.w() + velocity2.w() + velocity3.w() + velocity4.w() +                 velocity6.w() + velocity7.w() + velocity8.w());
-                float velocity6change = 1.0f/8.0f * 1.0f/7.0f * (velocity1.w() + velocity2.w() + velocity3.w() + velocity4.w() + velocity5.w() +                 velocity7.w() + velocity8.w());
-                float velocity7change = 1.0f/8.0f * 1.0f/7.0f * (velocity1.w() + velocity2.w() + velocity3.w() + velocity4.w() + velocity5.w() + velocity6.w() +                 velocity8.w());
-                float velocity8change = 1.0f/8.0f * 1.0f/7.0f * (velocity1.w() + velocity2.w() + velocity3.w() + velocity4.w() + velocity5.w() + velocity6.w() + velocity7.w()                );
-
-                velocityArray[x     + (y       * height) + (z       * width * height)] = velocity1 + (float4(-divergence, -divergence, -divergence, 0) * velocity1change * velocity1.w());
-                velocityArray[x + 1 + (y       * height) + (z       * width * height)] = velocity2 + (float4( divergence, -divergence, -divergence, 0) * velocity2change * velocity2.w());
-                velocityArray[x     + ((y + 1) * height) + (z       * width * height)] = velocity3 + (float4(-divergence,  divergence, -divergence, 0) * velocity3change * velocity3.w());
-                velocityArray[x     + (y       * height) + ((z + 1) * width * height)] = velocity4 + (float4(-divergence, -divergence,  divergence, 0) * velocity4change * velocity4.w());
-                velocityArray[x     + ((y + 1) * height) + ((z + 1) * width * height)] = velocity5 + (float4(-divergence,  divergence,  divergence, 0) * velocity5change * velocity5.w());
-                velocityArray[x + 1 + (y       * height) + ((z + 1) * width * height)] = velocity6 + (float4( divergence, -divergence,  divergence, 0) * velocity6change * velocity6.w());
-                velocityArray[x + 1 + ((y + 1) * height) + (z       * width * height)] = velocity7 + (float4( divergence,  divergence, -divergence, 0) * velocity7change * velocity7.w());
-                velocityArray[x + 1 + ((y + 1) * height) + ((z + 1) * width * height)] = velocity8 + (float4( divergence,  divergence,  divergence, 0) * velocity8change * velocity8.w());
+                float velocity1change = 1.0f/8.0f ;//* 1.0f/7.0f * (                velocity2.w() + velocity3.w() + velocity4.w() + velocity5.w() + velocity6.w() + velocity7.w() + velocity8.w());
+                float velocity2change = 1.0f/8.0f ;//* 1.0f/7.0f * (velocity1.w() +                 velocity3.w() + velocity4.w() + velocity5.w() + velocity6.w() + velocity7.w() + velocity8.w());
+                float velocity3change = 1.0f/8.0f ;//* 1.0f/7.0f * (velocity1.w() + velocity2.w() +                 velocity4.w() + velocity5.w() + velocity6.w() + velocity7.w() + velocity8.w());
+                float velocity4change = 1.0f/8.0f ;//* 1.0f/7.0f * (velocity1.w() + velocity2.w() + velocity3.w() +                 velocity5.w() + velocity6.w() + velocity7.w() + velocity8.w());
+                float velocity5change = 1.0f/8.0f ;//* 1.0f/7.0f * (velocity1.w() + velocity2.w() + velocity3.w() + velocity4.w() +                 velocity6.w() + velocity7.w() + velocity8.w());
+                float velocity6change = 1.0f/8.0f ;//* 1.0f/7.0f * (velocity1.w() + velocity2.w() + velocity3.w() + velocity4.w() + velocity5.w() +                 velocity7.w() + velocity8.w());
+                float velocity7change = 1.0f/8.0f ;//* 1.0f/7.0f * (velocity1.w() + velocity2.w() + velocity3.w() + velocity4.w() + velocity5.w() + velocity6.w() +                 velocity8.w());
+                float velocity8change = 1.0f/8.0f ;//* 1.0f/7.0f * (velocity1.w() + velocity2.w() + velocity3.w() + velocity4.w() + velocity5.w() + velocity6.w() + velocity7.w()                );
+                
+                velocityArray[x     + (y       * height) + (z       * width * height)] = velocity1 + (velocity1projection - scale3d(velocity1projection, divergence * velocity1change));
+                velocityArray[x + 1 + (y       * height) + (z       * width * height)] = velocity2 + (velocity2projection - scale3d(velocity2projection, divergence * velocity2change));
+                velocityArray[x     + ((y + 1) * height) + (z       * width * height)] = velocity3 + (velocity3projection - scale3d(velocity3projection, divergence * velocity3change));
+                velocityArray[x     + (y       * height) + ((z + 1) * width * height)] = velocity4 + (velocity4projection - scale3d(velocity4projection, divergence * velocity4change));
+                velocityArray[x     + ((y + 1) * height) + ((z + 1) * width * height)] = velocity5 + (velocity5projection - scale3d(velocity5projection, divergence * velocity5change));
+                velocityArray[x + 1 + (y       * height) + ((z + 1) * width * height)] = velocity6 + (velocity6projection - scale3d(velocity6projection, divergence * velocity6change));
+                velocityArray[x + 1 + ((y + 1) * height) + (z       * width * height)] = velocity7 + (velocity7projection - scale3d(velocity7projection, divergence * velocity7change));
+                velocityArray[x + 1 + ((y + 1) * height) + ((z + 1) * width * height)] = velocity8 + (velocity8projection - scale3d(velocity8projection, divergence * velocity8change));
             });
         });
         
@@ -455,4 +467,3 @@ class Simulation
         return x + (y * this->height) + (z * this->width * this->height);
     }
 };
-

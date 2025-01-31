@@ -23,7 +23,7 @@ int main()
 {
     // set up memory
     // initilize the simulation
-    Simulation sim(3, 3, 3);
+    Simulation sim(10, 10, 10);
     
     Messenger messenger = Messenger(4331, sim.vectors, *sim.pWidth, *sim.pHeight, *sim.pDepth);
 
