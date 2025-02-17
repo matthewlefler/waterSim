@@ -1,9 +1,5 @@
 CMakeFiles/main.dir/src/main.cpp.o: \
   /home/lefler/Documents/gitRepos/waterSim/backend/src/main.cpp \
-  /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/detail/defines_elementary.hpp \
-  /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/detail/kernel_desc.hpp \
-  /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/detail/export.hpp \
-  /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/ext/oneapi/experimental/free_function_traits.hpp \
   /home/lefler/Documents/gitRepos/waterSim/backend/src/simulation_class.h \
   /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/vector \
   /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/requires_hosted.h \
@@ -159,6 +155,7 @@ CMakeFiles/main.dir/src/main.cpp.o: \
   /usr/include/x86_64-linux-gnu/bits/select.h \
   /usr/include/x86_64-linux-gnu/bits/types/sigset_t.h \
   /usr/include/alloca.h \
+  /usr/include/x86_64-linux-gnu/bits/stdlib-bsearch.h \
   /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
   /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/std_abs.h \
   /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/cstdio \
@@ -168,6 +165,7 @@ CMakeFiles/main.dir/src/main.cpp.o: \
   /usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h \
   /usr/include/x86_64-linux-gnu/bits/types/cookie_io_functions_t.h \
   /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/stdio.h \
   /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/cerrno \
   /usr/include/errno.h /usr/include/x86_64-linux-gnu/bits/errno.h \
   /usr/include/linux/errno.h /usr/include/x86_64-linux-gnu/asm/errno.h \
@@ -201,11 +199,28 @@ CMakeFiles/main.dir/src/main.cpp.o: \
   /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
   /usr/include/x86_64-linux-gnu/bits/stdint-least.h \
   /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/atomic_lockfree_defines.h \
+  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/array \
+  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/compare \
   /home/lefler/Documents/gitRepos/waterSim/backend/src/float4_helper_functions.h \
   /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/sycl.hpp \
   /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/detail/core.hpp \
   /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/accessor.hpp \
   /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/access/access.hpp \
+  /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/detail/defines_elementary.hpp \
+  /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/CL/__spirv/spirv_ops.hpp \
+  /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/CL/__spirv/spirv_types.hpp \
+  /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/detail/defines.hpp \
+  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/climits \
+  /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../opt/compiler/include/limits.h \
+  /opt/intel/oneapi/compiler/2025.0/lib/clang/19/include/limits.h \
+  /usr/include/limits.h /usr/include/x86_64-linux-gnu/bits/posix1_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/local_lim.h \
+  /usr/include/linux/limits.h \
+  /usr/include/x86_64-linux-gnu/bits/posix2_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/xopen_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/uio_lim.h \
+  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/cstdint \
+  /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/detail/export.hpp \
   /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/aliases.hpp \
   /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/half_type.hpp \
   /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/bit_cast.hpp \
@@ -219,7 +234,9 @@ CMakeFiles/main.dir/src/main.cpp.o: \
   /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/stl_tempbuf.h \
   /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/pstl/glue_algorithm_defs.h \
   /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/pstl/execution_defs.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/cstdint \
+  /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/aspects.hpp \
+  /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/info/aspects.def \
+  /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/info/aspects_deprecated.def \
   /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/functional \
   /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/std_function.h \
   /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/unordered_map \
@@ -230,27 +247,12 @@ CMakeFiles/main.dir/src/main.cpp.o: \
   /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/enable_special_members.h \
   /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/node_handle.h \
   /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/erase_if.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/array \
-  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/compare \
   /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/limits \
-  /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/aspects.hpp \
-  /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/detail/defines.hpp \
-  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/climits \
-  /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../opt/compiler/include/limits.h \
-  /opt/intel/oneapi/compiler/2025.0/lib/clang/19/include/limits.h \
-  /usr/include/limits.h /usr/include/x86_64-linux-gnu/bits/posix1_lim.h \
-  /usr/include/x86_64-linux-gnu/bits/local_lim.h \
-  /usr/include/linux/limits.h \
-  /usr/include/x86_64-linux-gnu/bits/posix2_lim.h \
-  /usr/include/x86_64-linux-gnu/bits/xopen_lim.h \
-  /usr/include/x86_64-linux-gnu/bits/uio_lim.h \
-  /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/info/aspects.def \
-  /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/info/aspects_deprecated.def \
   /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/atomic.hpp \
-  /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/CL/__spirv/spirv_types.hpp \
   /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/detail/helpers.hpp \
   /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/memory_enums.hpp \
   /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/ur_api.h \
+  /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/CL/__spirv/spirv_vars.hpp \
   /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/memory \
   /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/stl_raw_storage_iter.h \
   /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/align.h \
@@ -266,7 +268,6 @@ CMakeFiles/main.dir/src/main.cpp.o: \
   /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/utility \
   /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/stl_relops.h \
   /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/multi_ptr.hpp \
-  /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/CL/__spirv/spirv_ops.hpp \
   /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/detail/type_traits.hpp \
   /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/detail/generic_type_lists.hpp \
   /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/detail/type_list.hpp \
@@ -401,13 +402,13 @@ CMakeFiles/main.dir/src/main.cpp.o: \
   /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/detail/cg_types.hpp \
   /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/detail/host_profiling_info.hpp \
   /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/detail/item_base.hpp \
+  /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/detail/kernel_desc.hpp \
   /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/group.hpp \
   /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/device_event.hpp \
   /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/h_item.hpp \
   /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/item.hpp \
   /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/kernel_handler.hpp \
   /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/nd_item.hpp \
-  /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/CL/__spirv/spirv_vars.hpp \
   /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/nd_range.hpp \
   /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/sub_group.hpp \
   /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/device.hpp \
@@ -436,25 +437,29 @@ CMakeFiles/main.dir/src/main.cpp.o: \
   /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/ext/oneapi/kernel_properties/properties.hpp \
   /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/kernel.hpp \
   /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/kernel_bundle.hpp \
+  /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/ext/oneapi/experimental/free_function_traits.hpp \
   /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/feature_test.hpp \
   /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/accessor_image.hpp \
   /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/detail/image_accessor_util.hpp \
+  /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/image.hpp \
+  /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/detail/backend_traits.hpp \
+  /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/types.hpp \
+  /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/marray.hpp \
+  /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/vector.hpp \
+  /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/detail/memcpy.hpp \
+  /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/detail/vector_arith.hpp \
+  /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/detail/vector_convert.hpp \
+  /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/swizzles.def \
+  /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/detail/image_ocl_types.hpp \
+  /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/atomic_fence.hpp \
+  /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/detail/spirv.hpp \
+  /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/ext/oneapi/experimental/non_uniform_groups.hpp \
+  /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/ext/oneapi/sub_group_mask.hpp \
   /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/builtins.hpp \
   /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/detail/builtins/builtins.hpp \
   /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/builtins_utils_vec.hpp \
   /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/builtins_utils_scalar.hpp \
   /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/detail/boolean.hpp \
-  /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/marray.hpp \
-  /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/types.hpp \
-  /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/vector.hpp \
-  /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/detail/memcpy.hpp \
-  /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/detail/vector_arith.hpp \
-  /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/detail/vector_convert.hpp \
-  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/cfenv \
-  /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../opt/compiler/include/fenv.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/fenv.h \
-  /usr/include/fenv.h /usr/include/x86_64-linux-gnu/bits/fenv.h \
-  /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/swizzles.def \
   /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/detail/builtins/common_functions.inc \
   /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/detail/builtins/helper_macros.hpp \
   /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/detail/builtins/geometric_functions.inc \
@@ -463,9 +468,6 @@ CMakeFiles/main.dir/src/main.cpp.o: \
   /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/detail/builtins/math_functions.inc \
   /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/detail/builtins/native_math_functions.inc \
   /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/detail/builtins/relational_functions.inc \
-  /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/image.hpp \
-  /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/detail/backend_traits.hpp \
-  /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/atomic_fence.hpp \
   /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/atomic_ref.hpp \
   /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/backend.hpp \
   /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/detail/backend_traits_opencl.hpp \
@@ -480,11 +482,13 @@ CMakeFiles/main.dir/src/main.cpp.o: \
   /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/ext/oneapi/experimental/group_sort.hpp \
   /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/ext/oneapi/experimental/group_helpers_sorters.hpp \
   /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/sycl_span.hpp \
-  /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/functional.hpp \
+  /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/detail/group_sort_impl.hpp \
+  /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/detail/key_value_iterator.hpp \
   /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/group_algorithm.hpp \
+  /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/functional.hpp \
   /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/known_identity.hpp \
+  /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/ext/oneapi/functional.hpp \
   /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/group_barrier.hpp \
-  /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/detail/spirv.hpp \
   /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/interop_handle.hpp \
   /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/pipes.hpp \
   /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/ext/intel/pipes.hpp \
@@ -510,6 +514,8 @@ CMakeFiles/main.dir/src/main.cpp.o: \
   /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/ext/intel/experimental/fpga_mem/properties.hpp \
   /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/ext/intel/experimental/pipe_properties.hpp \
   /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/ext/intel/experimental/pipes.hpp \
+  /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/ext/intel/experimental/fpga_utils.hpp \
+  /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/ext/oneapi/latency_control/properties.hpp \
   /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/ext/intel/experimental/usm_properties.hpp \
   /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/ext/intel/usm_pointers.hpp \
   /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/ext/oneapi/bindless_images.hpp \
@@ -535,8 +541,6 @@ CMakeFiles/main.dir/src/main.cpp.o: \
   /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/ext/oneapi/experimental/annotated_usm/dealloc.hpp \
   /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/ext/oneapi/experimental/auto_local_range.hpp \
   /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/ext/oneapi/experimental/ballot_group.hpp \
-  /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/ext/oneapi/experimental/non_uniform_groups.hpp \
-  /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/ext/oneapi/sub_group_mask.hpp \
   /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/ext/oneapi/experimental/bfloat16_math.hpp \
   /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/ext/oneapi/experimental/builtins.hpp \
   /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/ext/oneapi/experimental/composite_device.hpp \
@@ -550,7 +554,6 @@ CMakeFiles/main.dir/src/main.cpp.o: \
   /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/ext/oneapi/experimental/root_group.hpp \
   /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/ext/oneapi/experimental/tangle_group.hpp \
   /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/ext/oneapi/filter_selector.hpp \
-  /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/ext/oneapi/functional.hpp \
   /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/ext/oneapi/group_local_memory.hpp \
   /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/ext/oneapi/matrix/matrix.hpp \
   /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/ext/oneapi/matrix/matrix-unified.hpp \

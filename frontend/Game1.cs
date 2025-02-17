@@ -7,9 +7,6 @@ using System;
 using Objects;
 using MonoGame.Extended.BitmapFonts;
 using Cameras;
-using MonoGame.Extended.Particles;
-using MonoGame.Extended.Screens;
-using MonoGame.Extended.Input;
 
 namespace frontend;
 
@@ -190,14 +187,22 @@ public class Game1 : Game
             GraphicsDevice.DrawUserPrimitives(PrimitiveType.LineList, origin_axii_lines, 0, 3);
         }
         
-        if(sim.voxelObject is not null & sim.voxelObject.vertices.Length > 0)
-        {
-            sim.voxelObject.Draw(basicEffect);
-        }
+        sim.Draw(basicEffect);
 
         _spriteBatch.DrawString(font, frame_rate.ToString(), Vector2.One, Color.WhiteSmoke, 0, Vector2.Zero, 0.3f, SpriteEffects.None, 0f);
 
+        _spriteBatch.DrawString(font, camera.position.ToString(), new Vector2(screen_x - (camera.position.ToString().Length * 13),1), Color.WhiteSmoke, 0, Vector2.Zero, 0.3f, SpriteEffects.None, 0f);
+
         _spriteBatch.DrawString(font, sim.cells[0].ToString(), new Vector2(1, 30), Color.WhiteSmoke, 0, Vector2.Zero, 0.3f, SpriteEffects.None, 0f);
+
+        for(int j = 0; j < sim.streamLines.Length && j < 1; j++)
+        {
+            Vector3[] poses = sim.streamLines[j].getPositions();
+            for (int i = 0; i < poses.Length; i++)
+            {
+                _spriteBatch.DrawString(font, poses[i].ToString(), new Vector2(1 + (j * 100), 70 + (30 * i)), Color.GhostWhite, 0, Vector2.Zero, 0.2f, SpriteEffects.None, 0f);
+            }
+        }
 
         _spriteBatch.End();
         base.Draw(gameTime);

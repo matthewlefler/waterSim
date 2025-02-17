@@ -177,6 +177,8 @@ public class LineObject : Object
     public LineObject(Vector3 position, Quaternion rotation, GraphicsDevice graphics_device) : base(position, rotation, graphics_device)
     {
         line_points = [Vector3.Zero, Vector3.Zero];
+
+        UpdateVertices();
     }
 
     public void SetData(Vector3[] points) 
@@ -188,6 +190,8 @@ public class LineObject : Object
 
     public void UpdateVertices()
     {
+        if(line_points.Length < 2) { return; }
+        
         VertexPositionColor[] vertices = new VertexPositionColor[line_points.Length];
 
         for (int i = 0; i < vertices.Length; i++)
@@ -201,11 +205,19 @@ public class LineObject : Object
 
     public override void Draw(Effect effect)
     {
+        if(line_points.Length < 2) { return; }
+
         graphics_device.SetVertexBuffer(vertex_buffer);
+        effect.Parameters["World"].SetValue(Matrix.CreateTranslation(this.position));
 
         foreach(EffectPass pass in effect.CurrentTechnique.Passes) 
         {
             graphics_device.DrawPrimitives(PrimitiveType.LineStrip, 0, line_points.Length - 1);
         }
+    }
+
+    public Vector3[] getPositions() 
+    {
+        return line_points;
     }
 }

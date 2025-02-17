@@ -10,6 +10,7 @@
 #include <vector>
 #include <iostream>
 #include <atomic>
+#include <array>
 
 #include "float4_helper_functions.h" // a few helper functions such as dot product, magnitude etc. for the xyz componenets of a float4
 
@@ -67,10 +68,6 @@ class Simulation
         int depth;
         int arrLen;
 
-        int* deviceWidth; // width of the simulation stored on the device
-        int* deviceHeight;// height of the simulation stored on the device
-        int* deviceDepth; // depth of the simulation stored on the device
-
         queue q;
 
         /**
@@ -78,15 +75,13 @@ class Simulation
          * and ability of that velocity to change in the w component 
          *      (0.0f to 1.0f) 0 meaning can't change (aka a wall) 1 meaning it can change to the fullest extent
          */
-        float4* deviceVelocityArr; // device arr 1 and has length equal to arrLen 
 
-        float* deviceDensityArr; // device arr 2 and has length equal to arrLen 
-        
         // the divergence of the velocities of a cell are mutiplied by this, it helps to keep the simulation from collapsing
         const float overRelax = 1.0f;
-        float* deviceOverRelax; // overrelax value stored on device
 
-        float4* velocityVectors; // private host velocity array
+        sycl::buffer<bool, 3> changeableBuffer;
+        sycl::buffer<float4, 3> velocityVectorsBuffer1;
+        sycl::buffer<float4, 3> velocityVectorsBuffer2;
 
     public:
         const int* const pWidth = &width;
@@ -96,15 +91,15 @@ class Simulation
         const int* const pAmtOfCells = &arrLen;
         const int* const pVelocityArrLen = &arrLen;
 
-        //x and y and z velocity vector components + w for ability of that velocity to change 
+        // x and y and z velocity vector components + w for density
         float4* vectors;
-        // densities, one per individual cell
-        float* densities;
+        // one per velocity, the ablility of the velocity to change, true is yes false is no
+        bool* changeable;
 
     //constructor
     Simulation(int width, int height, int depth)
     {
-        this->q = queue(handle_async_error);
+        this->q = queue();
         std::cout << "running simulation on -> " << q.get_device().get_info<info::device::name>() << std::endl;
 
         this->height = height;
@@ -113,77 +108,29 @@ class Simulation
 
         this->arrLen = this->width * this->height * this->depth;
 
-        this->velocityVectors = new float4[this->arrLen];
-        this->vectors = velocityVectors;
-
-        this->deviceDensityArr = new float[this->arrLen];
-        this->densities = this->deviceDensityArr;
 
 
-        // allocate enough space in the device for the array of vectors
-        this->deviceVelocityArr = malloc_device<float4>(this->arrLen * sizeof(float4), q);
-
-        // allocate enough space in the device for the array of densities
-        this->deviceDensityArr = malloc_device<float>(this->arrLen * sizeof(float), q);
-
-        // allocate space for the width, height, and depth integers
-        this->deviceWidth = malloc_device<int>(sizeof(int), this->q); 
-        this->deviceHeight = malloc_device<int>(sizeof(int), this->q);
-        this->deviceDepth = malloc_device<int>(sizeof(int), this->q);
-
-        this->deviceOverRelax = malloc_device<float>(sizeof(float), this->q);
+        changeableBuffer = new buffer(changeable, );
 
         // copy vectors to the device
-        this->q.submit([&](handler& h) {
-            h.memcpy(this->deviceVelocityArr, this->velocityVectors, this->arrLen * sizeof(float4));
-        });
-
-        // copy densities to the device
-        this->q.submit([&](handler& h) {
-            h.memcpy(this->deviceDensityArr, this->densities, this->arrLen * sizeof(float));
-        }); 
-
-        // copy depth variable to device
-        this->q.submit([&](handler& h) { 
-            h.memcpy(this->deviceWidth, &this->width, sizeof(int));
-        });
-
-        // copy width variable to device
-        this->q.submit([&](handler& h) { 
-            h.memcpy(this->deviceHeight, &this->height, sizeof(int));
-        });
-
-        // copy height variable to device
-        this->q.submit([&](handler& h) { 
-            h.memcpy(this->deviceDepth, &this->depth, sizeof(int));
-        });
-
-        // copy overrelax variable to device
-        this->q.submit([&](handler& h) { 
-            h.memcpy(this->deviceOverRelax, &this->overRelax, sizeof(float));
-        });
-
-        //wait for all the memcpys to complete
-        this->q.wait();
+        this->send();
     }
 
     // deconstructor
     ~Simulation()
     {
         // free the allocated memory in the device
-        free(this->deviceVelocityArr, q); 
-        free(this->deviceDensityArr, q); 
-        free(this->deviceWidth, q);
-        free(this->deviceHeight, q);
-        free(this->deviceDepth, q);
+        free(this->changeableBuffer, q); 
+        free(this->velocityVectorsBuffer, q); 
+        free(this->deviceOverRelax, q);
 
         delete[] this->velocityVectors; // free the array memory
-        delete[] this->densities; // x2
+        delete[] this->changeableArr; // x2
     }
 
     /**
-     * recopy the density, velocity arrays, and the width, height, depth, and overrelax to the device attached to the queue,
-     * overwriting the old data already there
+     * recopy the changeability, velocity arrays, and the width, height, depth, and overrelax to the device attached to the queue,
+     * overwriting the data already there
      */
     void send()
     {
@@ -192,9 +139,9 @@ class Simulation
             h.memcpy(this->deviceVelocityArr, this->velocityVectors, this->arrLen * sizeof(float4));
         });
 
-        // copy densities to the device
+        // copy changability of velocities to the device
         this->q.submit([&](handler& h) {
-            h.memcpy(this->deviceDensityArr, this->densities, this->arrLen * sizeof(float));
+            h.memcpy(this->deviceChangeableArr, this->changeableArr, this->arrLen * sizeof(bool));
         });
 
         // copy depth variable to device
@@ -223,21 +170,23 @@ class Simulation
     void next_frame(float dt)
     {
         float4* velocityArray = this->deviceVelocityArr;
-        float* densityArray = this->deviceDensityArr;
+        bool* changeableArray = this->deviceChangeableArr;
                 
         int* pWidth = deviceWidth;
         int* pHeight = deviceHeight;
         int* pDepth = deviceDepth;
 
         float* pOverRelax = deviceOverRelax;
+        
+        std::cout << "starting done" << std::endl;
 
         // do the math
-        event modifyVelocityValues = 
+        //event modifyVelocityValues = 
         this->q.submit([&](handler& h) 
         {
             h.parallel_for(this->arrLen, [=](id<1> i) 
             {
-                velocityArray[i].y() -= 1.0f * dt * velocityArray[i].w();
+                velocityArray[i].y() -= 1.0f * dt;
 
                 int width = *pWidth;
                 int height = *pHeight;
@@ -246,26 +195,19 @@ class Simulation
                 int x = i % (width - 1);
                 int y = (i / (width - 1)) % (height - 1);
                 int z = i / ((width - 1) * (height - 1));
-
-                if(y == 0 || z == 0 || x == 0 || y == height-1 || z == depth-1 || x == width-1 )
-                {
-                    velocityArray[i].x() = velocityArray[i+width*height].x() * -1.0f;
-                    velocityArray[i].y() = velocityArray[i+width*height].y() * -1.0f;
-                    velocityArray[i].z() = velocityArray[i+width*height].z() * -1.0f;
-                } 
-
+                
                 if(x == 0 || x == width - 1) 
                 {
-                    velocityArray[i].x() = 10.0f;
+                    velocityArray[i].x() = 1.0f;
                 }
             });
-        });
+        }).wait();
 
-
-        event projection = 
+        std::cout << "modifyVelocityValues done" << std::endl;
+        //event projection = 
         this->q.submit([&](handler& h) 
         {
-            h.depends_on(modifyVelocityValues);
+            //h.depends_on(modifyVelocityValues);
 
             /**
              * this is an idea that is being testing 
@@ -287,9 +229,9 @@ class Simulation
                 float overRelax = *pOverRelax;
 
                 
-                int x = i % (width - 1);
-                int y = (i / (width - 1)) % (height - 1);
-                int z = i / ((width - 1) * (height - 1)); 
+                int x = 1;//i % (width - 1);
+                int y = 1;//(i / (width - 1)) % (height - 1);
+                int z = 1;//i / ((width - 1) * (height - 1)); 
 
                 // x y z
                 
@@ -324,6 +266,28 @@ class Simulation
                 float4 velocity7 = velocityArray[x + 1 + ((y + 1) * height) + (z       * width * height)];
                 float4 velocity8 = velocityArray[x + 1 + ((y + 1) * height) + ((z + 1) * width * height)];
 
+                bool vel1change = changeableArray[x     + (y       * height) + (z       * width * height)];
+                bool vel2change = changeableArray[x + 1 + (y       * height) + (z       * width * height)];
+                bool vel3change = changeableArray[x     + ((y + 1) * height) + (z       * width * height)];
+                bool vel4change = changeableArray[x     + (y       * height) + ((z + 1) * width * height)];
+                bool vel5change = changeableArray[x     + ((y + 1) * height) + ((z + 1) * width * height)];
+                bool vel6change = changeableArray[x + 1 + (y       * height) + ((z + 1) * width * height)];
+                bool vel7change = changeableArray[x + 1 + ((y + 1) * height) + (z       * width * height)];
+                bool vel8change = changeableArray[x + 1 + ((y + 1) * height) + ((z + 1) * width * height)];
+
+
+                if( !vel1change &&
+                    !vel2change &&
+                    !vel3change &&
+                    !vel4change &&
+                    !vel5change &&
+                    !vel6change &&
+                    !vel7change &&
+                    !vel8change ) 
+                    {
+                        return;
+                    }
+
                 float4 velocity1projection = Projection3d(velocity1, -1, -1, -1);
                 float4 velocity2projection = Projection3d(velocity1,  1, -1, -1);
                 float4 velocity3projection = Projection3d(velocity1, -1,  1, -1);
@@ -350,14 +314,23 @@ class Simulation
                 float divergence = out1 + out2 + out3 + out4 + out5 + out6 + out7 + out8;
                 divergence = divergence * overRelax;
 
-                float velocity1change = 1.0f/8.0f ;//* 1.0f/7.0f * (                velocity2.w() + velocity3.w() + velocity4.w() + velocity5.w() + velocity6.w() + velocity7.w() + velocity8.w());
-                float velocity2change = 1.0f/8.0f ;//* 1.0f/7.0f * (velocity1.w() +                 velocity3.w() + velocity4.w() + velocity5.w() + velocity6.w() + velocity7.w() + velocity8.w());
-                float velocity3change = 1.0f/8.0f ;//* 1.0f/7.0f * (velocity1.w() + velocity2.w() +                 velocity4.w() + velocity5.w() + velocity6.w() + velocity7.w() + velocity8.w());
-                float velocity4change = 1.0f/8.0f ;//* 1.0f/7.0f * (velocity1.w() + velocity2.w() + velocity3.w() +                 velocity5.w() + velocity6.w() + velocity7.w() + velocity8.w());
-                float velocity5change = 1.0f/8.0f ;//* 1.0f/7.0f * (velocity1.w() + velocity2.w() + velocity3.w() + velocity4.w() +                 velocity6.w() + velocity7.w() + velocity8.w());
-                float velocity6change = 1.0f/8.0f ;//* 1.0f/7.0f * (velocity1.w() + velocity2.w() + velocity3.w() + velocity4.w() + velocity5.w() +                 velocity7.w() + velocity8.w());
-                float velocity7change = 1.0f/8.0f ;//* 1.0f/7.0f * (velocity1.w() + velocity2.w() + velocity3.w() + velocity4.w() + velocity5.w() + velocity6.w() +                 velocity8.w());
-                float velocity8change = 1.0f/8.0f ;//* 1.0f/7.0f * (velocity1.w() + velocity2.w() + velocity3.w() + velocity4.w() + velocity5.w() + velocity6.w() + velocity7.w()                );
+                float change_amount = 1.0f/((int) vel1change + 
+                                            (int) vel2change + 
+                                            (int) vel3change + 
+                                            (int) vel4change + 
+                                            (int) vel5change + 
+                                            (int) vel6change + 
+                                            (int) vel7change + 
+                                            (int) vel8change );
+
+                float velocity1change = vel1change * change_amount;
+                float velocity2change = vel2change * change_amount;
+                float velocity3change = vel3change * change_amount;
+                float velocity4change = vel4change * change_amount;
+                float velocity5change = vel5change * change_amount;
+                float velocity6change = vel6change * change_amount;
+                float velocity7change = vel7change * change_amount;
+                float velocity8change = vel8change * change_amount;
                 
                 velocityArray[x     + (y       * height) + (z       * width * height)] = velocity1 + (velocity1projection - scale3d(velocity1projection, divergence * velocity1change));
                 velocityArray[x + 1 + (y       * height) + (z       * width * height)] = velocity2 + (velocity2projection - scale3d(velocity2projection, divergence * velocity2change));
@@ -368,29 +341,35 @@ class Simulation
                 velocityArray[x + 1 + ((y + 1) * height) + (z       * width * height)] = velocity7 + (velocity7projection - scale3d(velocity7projection, divergence * velocity7change));
                 velocityArray[x + 1 + ((y + 1) * height) + ((z + 1) * width * height)] = velocity8 + (velocity8projection - scale3d(velocity8projection, divergence * velocity8change));
             });
-        });
+        }).wait();
+        std::cout << "projection done" << std::endl;
         
 
-        event advection = 
+        //event advection = 
         this->q.submit([&](handler& h) 
         {
-            h.depends_on(projection);
+            //h.depends_on(projection);
 
             h.parallel_for(this->arrLen, [=](id<1> i) 
             {
+                if(changeableArray[i] == false)
+                {
+                    return;
+                }
+
                 int width = *pWidth;
                 int height = *pHeight;
                 int depth = *pDepth;
 
-                int x = i % width;
-                int y = (i / width) % height;
-                int z = i / (width * height);
+                int x = 1;//i % width;
+                int y = 1;//(i / width) % height;
+                int z = 1;//i / (width * height);
 
                 float previousX = x - (velocityArray[i].x() * dt); // position to grab values from, over/under flow positions wrap around 
                 float previousY = y - (velocityArray[i].y() * dt); 
                 float previousZ = z - (velocityArray[i].z() * dt);
 
-                // previousX = previousX - (width - 1)  * sycl::_V1::floor(previousX / (width - 1)); // mod so that they are within the range: (0 to width)
+                // previousX = previousX - (width - 1)  * sycl::_V1::floor(previousX / (width - 1)); // mod so that they are within the range: (0 to width - 1)
                 // previousY = previousY - (height - 1) * sycl::_V1::floor(previousY / (height - 1)); // (0 to height)
                 // previousZ = previousZ - (depth - 1)  * sycl::_V1::floor(previousZ / (depth - 1)); // (0 to depth)
 
@@ -429,16 +408,19 @@ class Simulation
 
                 //out << i << ": " << velocityArray[i].x() << " " << velocityArray[i].y() << " " << velocityArray[i].z() << " " << velocityArray[i].w() << " | ";
             });
-        }); 
+        }).wait(); 
+        std::cout << "advection done" << std::endl;
 
 
         // then copy it back to the vectors host array
         this->q.submit([&](handler& h) 
         {
-            h.depends_on(advection);
+            //h.depends_on(advection);
 
             h.memcpy(this->velocityVectors, deviceVelocityArr, this->arrLen * sizeof(float4));
         });
+        std::cout << "copy done" << std::endl;
+
 
         this->q.wait();
     }

@@ -1,29 +1,23 @@
 using System;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Security.Cryptography.X509Certificates;
-using System.Threading;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
 namespace Objects;
 
-public class Simulation
+public class Simulation : Object
 {
     public Vector4[] cells; // x, y, z   y+ is up
     public VoxelObject voxelObject;
 
     public LineObject[] streamLines;
-    int steps = 10; // the number of line segments each stream line should have 
+    const int steps = 10; // the number of line segments each stream line should have 
 
 
     public int width;
     public int height;
     public int depth;
 
-    GraphicsDevice graphics_device;
-
-    public Simulation(GraphicsDevice graphics_device)
+    public Simulation(GraphicsDevice graphics_device) : base(Vector3.One, Quaternion.Identity, graphics_device)
     {
         this.cells = new Vector4[] { new Vector4(0, 0, 0, 0) };
 
@@ -43,20 +37,13 @@ public class Simulation
 
         this.voxelObject = new VoxelObject(Vector3.Zero, Quaternion.Identity, positions, colors, 0.1f, graphics_device);
 
-        streamLines = new LineObject[width * height];
-
-        for (int x = 0; x < width; x++)
-        {
-            for (int y = 0; y < height; y++)
-            {
-                streamLines[x * width + y] = new LineObject(new Vector3(x, y, 0), Quaternion.Identity, graphics_device);
-            }
-        }
+        streamLines = new LineObject[0];
+        updateStreamLines();
 
         this.graphics_device = graphics_device;
     }
 
-    public Simulation(Vector4[] cells, int width, int height, int depth, GraphicsDevice graphics_device)
+    public Simulation(Vector4[] cells, int width, int height, int depth, GraphicsDevice graphics_device) : base(Vector3.One, Quaternion.Identity, graphics_device)
     {
         this.cells = cells;
 
@@ -75,15 +62,8 @@ public class Simulation
 
         this.voxelObject = new VoxelObject(Vector3.Zero, Quaternion.Identity, positions, colors, 0.1f, graphics_device);
 
-        streamLines = new LineObject[width * height];
-
-        for (int x = 0; x < width; x++)
-        {
-            for (int y = 0; y < height; y++)
-            {
-                streamLines[x * width + y] = new LineObject(new Vector3(x, y, 0), Quaternion.Identity, graphics_device);
-            }
-        }
+        streamLines = new LineObject[0];
+        updateStreamLines();
 
         this.graphics_device = graphics_device;
     }
@@ -107,38 +87,74 @@ public class Simulation
 
             colors[i] = new Color( colX, colY, colZ);
             positions[i] = this.Get3DPositionVec(i);
-            //Console.WriteLine(i + ": " + colors[i] + " pos: " + positions[i] + " sent pos: " + this.cells[i].X + ", " + this.cells[i].Y + ", " + this.cells[i].Z + ", " + this.cells[i].W);
         }
 
         this.voxelObject.SetData(positions, colors);
-
-        streamLines = new LineObject[width * height];
-
-        for (int x = 0; x < width; x++)
-        {
-            for (int y = 0; y < height; y++)
-            {
-                streamLines[x * width + y] = new LineObject(new Vector3(x, y, 0), Quaternion.Identity, graphics_device);
-            }
-        }
+        
+        updateStreamLines();
     } 
 
-    public void updateStreamLines() 
+
+    override public void Draw(Effect effect)
     {
-        foreach(LineObject lineObject in streamLines)
+        if(voxelObject is null) { return; }
+
+        this.voxelObject.Draw(effect);
+
+        foreach(LineObject lineObject in streamLines) 
         {
-            Vector3[] positions = new Vector3[steps];
-            Vector3 pos = lineObject.position;
-            for(int i = 0; i < steps; i++) 
+            if(lineObject is null) { continue; }
+
+            lineObject.Draw(effect);
+        }
+    }
+
+    /// <summary>
+    /// update the line object collection, streamlines to match the velocities in the cells
+    /// </summary>
+    public void updateStreamLines()
+    {
+        if(height < 3 || depth < 3 || width < 3) { return; }
+
+        streamLines = new LineObject[(height-2) * (depth-2)];
+
+        for (int y = 1; y < height - 1; y++)
+        {
+            for (int z = 1; z < depth - 1; z++)
             {
-                if(pos.X > width || pos.X < 0 || pos.Y > height || pos.Y < 0 || pos.Z > depth || pos.Z < 0)
+                streamLines[(z-1) + ((y-1) * (height-2))] = new LineObject(new Vector3(1, y, z), Quaternion.Identity, graphics_device);
+            }
+        }
+
+        for(int i = 0; i < streamLines.Length; i++)
+        {
+            LineObject lineObject = streamLines[i];
+
+            Vector3[] positions = new Vector3[steps];
+
+            Vector3 pos = lineObject.position;
+            Vector3 velocity;
+
+            for(int j = 0; j < steps; j++) 
+            {
+                // position goes outside the sim, stop and copy the current to a new shorter array, and breal the loop
+                if(pos.X > width - 1 || pos.X < 0 || pos.Y > height - 1 || pos.Y < 0 || pos.Z > depth - 1 || pos.Z < 0)
                 {
+                    Vector3[] temp = positions;
+                    positions = new Vector3[j];
+                    for (int k = 0; k < positions.Length; k++)
+                    {
+                        positions[k] = temp[k];
+                    }
+
                     break;
                 }
 
-                positions[i] = pos;
+                positions[j] = pos;
 
-                pos += getVelocityAtPosition(pos);
+                velocity = getVelocityAtPosition(pos);
+                velocity.Normalize();
+                pos += velocity;
             }
 
             lineObject.SetData(positions);
@@ -167,9 +183,14 @@ public class Simulation
 
     public Vector3 getVelocityAtPosition(Vector3 pos)
     {
-        if(pos.X > width || pos.X < 0 || pos.Y > height || pos.Y < 0 || pos.Z > depth || pos.Z < 0)
+        if(pos.X is float.NaN || pos.Y is float.NaN || pos.Z is float.NaN)
         {
-            throw new System.ArgumentException("the argument {pos} is outside of the local dimesions of the simulation");
+            throw new System.ArgumentNullException($"At least one of the components of the argument {pos.ToString()} is NaN");
+        }
+
+        if(pos.X > width - 1 || pos.X < 0 || pos.Y > height - 1 || pos.Y < 0 || pos.Z > depth - 1 || pos.Z < 0)
+        {
+            throw new System.ArgumentOutOfRangeException($"the argument {pos.ToString()} is outside of the local dimesions of the simulation");
         }
 
         int minX = (int) pos.X; 
@@ -187,13 +208,13 @@ public class Simulation
         //trilinear interpolation
         Vector4 value = (
         (
-        (cells[minX + minY * height + minZ * width * height] * (yDec) + cells[minX + maxY * height + minZ * width * height] * (1-yDec)) * (xDec) +
-        (cells[maxX + minY * height + minZ * width * height] * (yDec) + cells[maxX + maxY * height + minZ * width * height] * (1-yDec)) * (1-xDec)
+        (cells[GetIndex(minX, minY, minZ)] * (yDec) + cells[GetIndex(minX, maxY, minZ)] * (1-yDec)) * (xDec) +
+        (cells[GetIndex(maxX, minY, minZ)] * (yDec) + cells[GetIndex(maxX, maxY, minZ)] * (1-yDec)) * (1-xDec)
         ) 
         * (zDec) +
         (
-        (cells[minX + minY * height + maxZ * width * height] * (yDec) + cells[minX + maxY * height + maxZ * width * height] * (1-yDec)) * (xDec) + 
-        (cells[maxX + minY * height + maxZ * width * height] * (yDec) + cells[maxX + maxY * height + maxZ * width * height] * (1-yDec)) * (1-xDec)
+        (cells[GetIndex(minX, minY, maxZ)] * (yDec) + cells[GetIndex(minX, maxY, minZ)] * (1-yDec)) * (xDec) + 
+        (cells[GetIndex(maxX, minY, maxZ)] * (yDec) + cells[GetIndex(maxX, maxY, minZ)] * (1-yDec)) * (1-xDec)
         ) 
         * (1-zDec)
         );

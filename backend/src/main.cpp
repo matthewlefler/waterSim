@@ -29,6 +29,7 @@ int main()
 
     std::cout << "width: " << *sim.pWidth << " height: " << *sim.pHeight << " depth: " << *sim.pDepth << " total number of cells: " << *sim.pAmtOfCells << "\n";
 
+    float r = 2;
     // assign the stating value of the simulation
     for (int i = 0; i < *sim.pAmtOfCells; ++i)
     {
@@ -36,11 +37,25 @@ int main()
         int y = sim.getYPos(i);
         int z = sim.getZPos(i);
 
-        sim.vectors[i] = sycl::_V1::float4(0.0f, 2.5f, 1.0f, 1.0f);
+        sim.vectors[i] = sycl::_V1::float4(0.0f, 0.0f, 0.0f, 1.0f);
+        sim.changeable[i] = true;
 
-        if(y == 0)
+        if(y == 0 || y == *sim.pWidth - 1 || z == 0 || z == *sim.pDepth - 1)
         {
-            sim.vectors[i].w() = 0.0f;
+            sim.vectors[i].x() = 0.0f;
+            sim.vectors[i].y() = 0.0f;
+            sim.vectors[i].z() = 0.0f;
+
+            sim.changeable[i] = false;
+        }
+
+        if(x*x + y*y < r*r)
+        {
+            sim.vectors[i].x() = 0.0f;
+            sim.vectors[i].y() = 0.0f;
+            sim.vectors[i].z() = 0.0f;
+            
+            sim.changeable[i] = false;
         }
     }
 
