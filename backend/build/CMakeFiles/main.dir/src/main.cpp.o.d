@@ -1,7 +1,7 @@
 CMakeFiles/main.dir/src/main.cpp.o: \
   /home/lefler/Documents/gitRepos/waterSim/backend/src/main.cpp \
-  /home/lefler/Documents/gitRepos/waterSim/backend/src/simulation_class.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/vector \
+  /home/lefler/Documents/gitRepos/waterSim/backend/src/simulation/simulation_class.hpp \
+  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/iostream \
   /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/requires_hosted.h \
   /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/x86_64-linux-gnu/c++/13/bits/c++config.h \
   /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/x86_64-linux-gnu/c++/13/bits/os_defines.h \
@@ -15,71 +15,21 @@ CMakeFiles/main.dir/src/main.cpp.o: \
   /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/x86_64-linux-gnu/c++/13/bits/cpu_defines.h \
   /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/pstl/pstl_config.h \
   /opt/intel/oneapi/tbb/2022.0/env/../include/tbb/tbb.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/stl_algobase.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/functexcept.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/exception_defines.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/cpp_type_traits.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/ext/type_traits.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/ext/numeric_traits.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/stl_pair.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/type_traits \
-  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/move.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/utility.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/stl_iterator_base_types.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/stl_iterator_base_funcs.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/concept_check.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/debug/assertions.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/stl_iterator.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/ptr_traits.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/debug/debug.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/predefined_ops.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bit \
-  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/allocator.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/x86_64-linux-gnu/c++/13/bits/c++allocator.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/new_allocator.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/new \
-  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/exception.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/memoryfwd.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/stl_construct.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/stl_uninitialized.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/ext/alloc_traits.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/alloc_traits.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/stl_vector.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/initializer_list \
-  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/stl_bvector.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/functional_hash.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/hash_bytes.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/refwrap.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/invoke.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/stl_function.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/backward/binders.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/range_access.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/vector.tcc \
-  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/memory_resource.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/cstddef \
-  /opt/intel/oneapi/compiler/2025.0/lib/clang/19/include/stddef.h \
-  /opt/intel/oneapi/compiler/2025.0/lib/clang/19/include/__stddef_header_macro.h \
-  /opt/intel/oneapi/compiler/2025.0/lib/clang/19/include/__stddef_ptrdiff_t.h \
-  /opt/intel/oneapi/compiler/2025.0/lib/clang/19/include/__stddef_size_t.h \
-  /opt/intel/oneapi/compiler/2025.0/lib/clang/19/include/__stddef_wchar_t.h \
-  /opt/intel/oneapi/compiler/2025.0/lib/clang/19/include/__stddef_null.h \
-  /opt/intel/oneapi/compiler/2025.0/lib/clang/19/include/__stddef_nullptr_t.h \
-  /opt/intel/oneapi/compiler/2025.0/lib/clang/19/include/__stddef_max_align_t.h \
-  /opt/intel/oneapi/compiler/2025.0/lib/clang/19/include/__stddef_offsetof.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/uses_allocator.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/uses_allocator_args.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/tuple \
-  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/iostream \
   /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/ostream \
   /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/ios \
   /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/iosfwd \
   /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/stringfwd.h \
+  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/memoryfwd.h \
   /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/postypes.h \
   /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/cwchar \
   /usr/include/wchar.h \
   /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
   /usr/include/x86_64-linux-gnu/bits/floatn.h \
   /usr/include/x86_64-linux-gnu/bits/floatn-common.h \
+  /opt/intel/oneapi/compiler/2025.0/lib/clang/19/include/stddef.h \
+  /opt/intel/oneapi/compiler/2025.0/lib/clang/19/include/__stddef_size_t.h \
+  /opt/intel/oneapi/compiler/2025.0/lib/clang/19/include/__stddef_wchar_t.h \
+  /opt/intel/oneapi/compiler/2025.0/lib/clang/19/include/__stddef_null.h \
   /opt/intel/oneapi/compiler/2025.0/lib/clang/19/include/stdarg.h \
   /opt/intel/oneapi/compiler/2025.0/lib/clang/19/include/__stdarg___gnuc_va_list.h \
   /usr/include/x86_64-linux-gnu/bits/wchar.h \
@@ -91,9 +41,20 @@ CMakeFiles/main.dir/src/main.cpp.o: \
   /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
   /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
   /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/exception \
+  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/exception.h \
   /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/exception_ptr.h \
+  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/exception_defines.h \
   /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/cxxabi_init_exception.h \
+  /opt/intel/oneapi/compiler/2025.0/lib/clang/19/include/__stddef_header_macro.h \
+  /opt/intel/oneapi/compiler/2025.0/lib/clang/19/include/__stddef_ptrdiff_t.h \
+  /opt/intel/oneapi/compiler/2025.0/lib/clang/19/include/__stddef_nullptr_t.h \
+  /opt/intel/oneapi/compiler/2025.0/lib/clang/19/include/__stddef_max_align_t.h \
+  /opt/intel/oneapi/compiler/2025.0/lib/clang/19/include/__stddef_offsetof.h \
   /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/typeinfo \
+  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/hash_bytes.h \
+  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/new \
+  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/move.h \
+  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/type_traits \
   /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/nested_exception.h \
   /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/char_traits.h \
   /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/localefwd.h \
@@ -138,10 +99,39 @@ CMakeFiles/main.dir/src/main.cpp.o: \
   /usr/include/x86_64-linux-gnu/sys/single_threaded.h \
   /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/locale_classes.h \
   /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/string \
+  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/allocator.h \
+  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/x86_64-linux-gnu/c++/13/bits/c++allocator.h \
+  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/new_allocator.h \
+  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/functexcept.h \
+  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/cpp_type_traits.h \
   /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/ostream_insert.h \
   /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/cxxabi_forced.h \
+  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/stl_iterator_base_funcs.h \
+  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/concept_check.h \
+  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/debug/assertions.h \
+  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/stl_iterator_base_types.h \
+  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/stl_iterator.h \
+  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/ext/type_traits.h \
+  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/ptr_traits.h \
+  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/stl_function.h \
+  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/backward/binders.h \
+  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/ext/numeric_traits.h \
+  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/stl_algobase.h \
+  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/stl_pair.h \
+  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/utility.h \
+  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/debug/debug.h \
+  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/predefined_ops.h \
+  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bit \
+  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/refwrap.h \
+  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/invoke.h \
+  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/range_access.h \
+  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/initializer_list \
   /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/basic_string.h \
+  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/ext/alloc_traits.h \
+  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/alloc_traits.h \
+  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/stl_construct.h \
   /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/string_view \
+  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/functional_hash.h \
   /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/string_view.tcc \
   /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/ext/string_conversions.h \
   /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/cstdlib \
@@ -173,6 +163,11 @@ CMakeFiles/main.dir/src/main.cpp.o: \
   /usr/include/x86_64-linux-gnu/bits/types/error_t.h \
   /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/charconv.h \
   /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/basic_string.tcc \
+  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/memory_resource.h \
+  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/cstddef \
+  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/uses_allocator.h \
+  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/uses_allocator_args.h \
+  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/tuple \
   /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/locale_classes.tcc \
   /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/system_error \
   /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/x86_64-linux-gnu/c++/13/bits/error_constants.h \
@@ -199,9 +194,12 @@ CMakeFiles/main.dir/src/main.cpp.o: \
   /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
   /usr/include/x86_64-linux-gnu/bits/stdint-least.h \
   /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/atomic_lockfree_defines.h \
-  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/array \
-  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/compare \
-  /home/lefler/Documents/gitRepos/waterSim/backend/src/float4_helper_functions.h \
+  /home/lefler/Documents/gitRepos/waterSim/backend/src/simulation/float4_helper_functions.hpp \
+  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/vector \
+  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/stl_uninitialized.h \
+  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/stl_vector.h \
+  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/stl_bvector.h \
+  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/vector.tcc \
   /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/sycl.hpp \
   /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/detail/core.hpp \
   /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/accessor.hpp \
@@ -247,6 +245,8 @@ CMakeFiles/main.dir/src/main.cpp.o: \
   /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/enable_special_members.h \
   /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/node_handle.h \
   /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/bits/erase_if.h \
+  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/array \
+  /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/compare \
   /usr/lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/limits \
   /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/atomic.hpp \
   /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/detail/helpers.hpp \
@@ -567,8 +567,8 @@ CMakeFiles/main.dir/src/main.cpp.o: \
   /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/ext/oneapi/sub_group.hpp \
   /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/ext/oneapi/virtual_mem/physical_mem.hpp \
   /opt/intel/oneapi/compiler/2025.0/bin/compiler/../../include/sycl/ext/oneapi/virtual_mem/virtual_mem.hpp \
-  /home/lefler/Documents/gitRepos/waterSim/backend/src/main.h \
-  /home/lefler/Documents/gitRepos/waterSim/backend/src/socket/sockets.h \
+  /home/lefler/Documents/gitRepos/waterSim/backend/src/simulation/sim_setup_helper_functions.hpp \
+  /home/lefler/Documents/gitRepos/waterSim/backend/src/socket/sockets.hpp \
   /usr/local/include/Poco/Net/TCPServer.h \
   /usr/local/include/Poco/Net/Net.h /usr/local/include/Poco/Foundation.h \
   /usr/local/include/Poco/Config.h /usr/local/include/Poco/Platform.h \

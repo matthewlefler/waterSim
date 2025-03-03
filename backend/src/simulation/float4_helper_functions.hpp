@@ -1,5 +1,5 @@
 #include <vector>
-#include<sycl/sycl.hpp>
+#include <sycl/sycl.hpp>
 
 /**
  * this function does the dotproduct of the xyz componets of the float4 and the x, y, z floats

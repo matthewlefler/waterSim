@@ -41,7 +41,7 @@
 
 #include "sycl/sycl.hpp"
 
-#define DATATYPE float4 // size of 16 bytes (4 floats x,y,z,w consisting of 4 bytes each in a row)
+#define DATATYPE sycl::float4 // size of 16 bytes (4 floats x,y,z,w consisting of 4 bytes each in a row)
 
 const int send_buffer_length = 1024*10;
 
