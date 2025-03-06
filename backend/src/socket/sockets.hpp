@@ -6,7 +6,7 @@
     usecase:
         defines and provides functions for using ip sockets
 
-    packet 1 -> id for 2 byte | size of size for 1 bytes | size of msg for ?? bytes 
+    packet 1 -> id for 2 byte | size of size for 1 bytes | size of msg for 1021 bytes || totals 1024 for the header message 
     packet 2 -> msg with a number of bytes equal to size
         
         the id will increment over time meaning generarlly higher ids will be newer
@@ -20,7 +20,9 @@
             can hold any number of things
             ie: (float4) = 4 * 8 bytes or 32 bytes per float 4 
 
-        
+       -1 is some type of error
+       
+
         0 is base
         1 is get sim data -> aka width depth height the stats (standerdize this in the "future" lol)
         ...
@@ -41,40 +43,35 @@
 
 #include "sycl/sycl.hpp"
 
-#define DATATYPE sycl::float4 // size of 16 bytes (4 floats x,y,z,w consisting of 4 bytes each in a row)
-
 const int send_buffer_length = 1024*10;
 
 class EchoConnection: public Poco::Net::TCPServerConnection 
 {
     private:
-        DATATYPE* arr; // a pointer to the array; 
-        int arr_len; // the length of the array
+        sycl::host_accessor<float, 1, sycl::access_mode::read> accessor;
+        sycl::range<3> dims;
 
-        int size_of_arr_len;
-        static constexpr int size_of_data_type = sizeof(DATATYPE);
-
-        int width;
-        int height;
-        int depth;
+        int array_length;
+        int size_of_array_length;
+        static constexpr int size_of_data_type = sizeof(float);
 
         char iter = 'a';
 
     public:
-        EchoConnection(const Poco::Net::StreamSocket& s, DATATYPE* pointer_to_arr, int width, int height, int depth): TCPServerConnection(s) 
+        EchoConnection(const Poco::Net::StreamSocket& s, sycl::host_accessor<float, 1, sycl::access_mode::read> accessor, sycl::range<3> dims): TCPServerConnection(s) 
         {
-            this->arr = pointer_to_arr;
-            this->arr_len = width * height * depth;
-            this->width = width;
-            this->height = height;
-            this->depth = depth;
-            this->size_of_arr_len = sizeof(arr_len);
+            this->accessor = accessor;
+            this->dims = dims;
+
+            this->array_length = dims.get(0) * dims.get(1) * dims.get(2) * 3;
+            this->size_of_array_length = sizeof(array_length);
          }
 
     void run() 
     {
         Poco::Net::StreamSocket& ss = socket();
 
+        // used to exit on an abnormal shutdown of the endpoint/error condition of the socket
         bool exit = false;
         while(!exit)
         {
@@ -82,9 +79,9 @@ class EchoConnection: public Poco::Net::TCPServerConnection
                 char buffer[3];
                 int n = ss.receiveBytes(buffer, sizeof(buffer));
 
-                char send_buffer[send_buffer_length]; // size is arbitrary rn as idk what the max is and what it should be 
+                float send_buffer[send_buffer_length]; // size is arbitrary rn as idk what the max is and what it should be 
 
-                int number_of_bytes_to_send = size_of_data_type * arr_len; // amount of bytes required to model the data in the arr
+                int number_of_bytes_to_send = size_of_data_type * array_length; // amount of bytes required to model the data in the arr
 
                 int bytes_sent = 0;
 
@@ -95,21 +92,21 @@ class EchoConnection: public Poco::Net::TCPServerConnection
                     send_buffer[0] = 0;
                     send_buffer[1] = iter++;
 
-                    send_buffer[2] = size_of_arr_len;
+                    send_buffer[2] = size_of_array_length;
 
-                    std::memcpy(&send_buffer[3], &arr_len, size_of_arr_len);
+                    std::memcpy(&send_buffer[3], &array_length, size_of_array_length);
 
                     ss.sendBytes(&send_buffer, 1024); // has to match the receiveing buffer for the header msg in the receiver 
                                                       // as it is possible that if different the socket will read into the data and "delete" some data and offset the rest of the data
 
                     if(send_buffer_length > number_of_bytes_to_send) // if the data an be sent in one send call, do so
                     {
-                        for (int i = 0; i < arr_len; i++)
+                        for (int i = 0; i < array_length; i++)
                         {                           
-                            std::memcpy(&send_buffer[(i * size_of_data_type)], &(arr[i]), size_of_data_type);
+                            send_buffer[i] = accessor[i];
                         }
 
-                        bytes_sent += ss.sendBytes(&send_buffer, size_of_data_type * arr_len);
+                        bytes_sent += ss.sendBytes(&send_buffer, size_of_data_type * array_length);
                     }
                     else //split the data up into different send calls 
                     {
@@ -119,7 +116,8 @@ class EchoConnection: public Poco::Net::TCPServerConnection
                         {
                             for(int i = 0; i < send_buffer_length / size_of_data_type; i++)
                             {
-                                std::memcpy(&send_buffer[(i * size_of_data_type)], &(arr[j]), size_of_data_type);
+                                send_buffer[i] = accessor[j];
+
                                 j++;
                             }
 
@@ -137,9 +135,9 @@ class EchoConnection: public Poco::Net::TCPServerConnection
 
                     send_buffer[2] = 3;
 
-                    send_buffer[3] = this->width; // width
-                    send_buffer[4] = this->height; // height
-                    send_buffer[5] = this->depth; // depth 
+                    send_buffer[3] = this->dims.get(0); // width
+                    send_buffer[4] = this->dims.get(1); // height
+                    send_buffer[5] = this->dims.get(2); // depth 
 
                     ss.sendBytes(&send_buffer, 6);
 
@@ -149,12 +147,12 @@ class EchoConnection: public Poco::Net::TCPServerConnection
                     exit = true;
                     break;
 
-                case -1: // unsure what or how the first byte becomes -1 if the frontend is terminated/closed, but handle it anyway
+                case -1: // unsure what or how the first byte becomes -1 if the frontend is terminated/closed, but handle it anyway, probs due to a unexpected shutdown of the endpoint  ¯\_(ツ)_/¯
                     exit = true;
                     break;
 
                 default:
-                    std::cerr << "in sockets.h, EchoConnection: unhandled first received byte" << buffer[0] << "\n";
+                    std::cerr << "in sockets.h, EchoConnection: unhandled first received byte: " << buffer[0] << "\n";
                     break;
                 }            
             }
@@ -175,23 +173,19 @@ class EchoConnection: public Poco::Net::TCPServerConnection
 class TCPServerConnectionFactoryTheSecond: public Poco::Net::TCPServerConnectionFactory
 {
     private:
-        DATATYPE* arr;
-        int width;
-        int height;
-        int depth;
+        sycl::host_accessor<float, 1, sycl::access_mode::read> accessor;
+        sycl::range<3> dims;
 
     public:
-        TCPServerConnectionFactoryTheSecond(DATATYPE* arr, int width, int height, int depth)
+        TCPServerConnectionFactoryTheSecond(sycl::host_accessor<float, 1, sycl::access_mode::read> accessor, sycl::range<3> dims)
         {
-            this->arr = arr;
-            this->width = width;
-            this->height = height;
-            this->depth = depth;
+            this->accessor = accessor;
+            this->dims = dims;
         }
 
         Poco::Net::TCPServerConnection* createConnection(const Poco::Net::StreamSocket& socket)
         {
-            return new EchoConnection(socket, arr, width, height, depth);
+            return new EchoConnection(socket, accessor, dims);
         }
 }; 
 
@@ -202,10 +196,10 @@ class Messenger
 
     public:
 
-    Messenger(Poco::UInt16 port, DATATYPE* arr, int width, int height, int depth)
+    Messenger(Poco::UInt16 port, sycl::host_accessor<float, 1, sycl::access_mode::read> accessor, sycl::range<3> dims)
     {
-        server = new Poco::Net::TCPServer(new TCPServerConnectionFactoryTheSecond(arr, width, height, depth), port);
-        server->start();
+        server = new Poco::Net::TCPServer(new TCPServerConnectionFactoryTheSecond(accessor, dims), port);
+        server->start(); // start the async server object
 
         std::cout << "starting server at address: " << server->socket().address().toString() << " | with a send_buffer size of: " << send_buffer_length << " bytes " << "\n";
     }

@@ -24,9 +24,10 @@ int main()
     // initilize the simulation
     Simulation sim(10, 10, 10);
     
-    Messenger messenger = Messenger(4331, sim.vectors, *sim.pWidth, *sim.pHeight, *sim.pDepth);
+    // Messenger messenger = Messenger(4331, sim.get_host_access(), sim.get_dimensions());
 
-    std::cout << "width: " << *sim.pWidth << " height: " << *sim.pHeight << " depth: " << *sim.pDepth << " total number of cells: " << *sim.pAmtOfCells << "\n";
+    sycl::range<3> tempDims = sim.get_dimensions();
+    std::cout << "width: " << tempDims.get(0) << " height: " << tempDims.get(1) << " depth: " << tempDims.get(2) << "\n";
 
     int count = 0;
     std::atomic<bool> exit = std::atomic<bool>();
