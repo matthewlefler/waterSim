@@ -23,22 +23,25 @@ int main()
     // set up memory
     // initilize the simulation
     Simulation sim(10, 10, 10);
-    
-    // Messenger messenger = Messenger(4331, sim.get_host_access(), sim.get_dimensions());
 
     sycl::range<3> tempDims = sim.get_dimensions();
-    std::cout << "width: " << tempDims.get(0) << " height: " << tempDims.get(1) << " depth: " << tempDims.get(2) << "\n";
+    
+    Messenger messenger = Messenger(4331, sim.vector_array, tempDims.get(0), tempDims.get(1), tempDims.get(2));
+
+    std::cout << "simulation: width is " << tempDims.get(0) << ", height is " << tempDims.get(1) << ", depth is " << tempDims.get(2) << "\n";
 
     int count = 0;
     std::atomic<bool> exit = std::atomic<bool>();
-    exit = false;
+    exit.store(false);
 
     while(true)
     {
         // TODO: add proper timing and fps counter for stats
-        std::cout << "frame: " << count << "\n";
+        std::cout << "\n/////////////\n";
+        std::cout << "// frame " << count << " //\n";
+        std::cout << "/////////////\n" << std::endl;
+
         sim.next_frame(1.0f);
-        //sim.print();
 
         if(count > 200) { exit = true; }
 

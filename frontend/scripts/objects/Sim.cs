@@ -185,7 +185,10 @@ public class Simulation : Object
     {
         if(pos.X is float.NaN || pos.Y is float.NaN || pos.Z is float.NaN)
         {
-            throw new System.ArgumentNullException($"At least one of the components of the argument {pos.ToString()} is NaN");
+            Console.WriteLine($"At least one of the components of the argument {pos.ToString()} is NaN");
+            pos.X = pos.X is float.NaN ? 0.0f : pos.X;
+            pos.Y = pos.Y is float.NaN ? 0.0f : pos.Y;
+            pos.Z = pos.Z is float.NaN ? 0.0f : pos.Z;
         }
 
         if(pos.X > width - 1 || pos.X < 0 || pos.Y > height - 1 || pos.Y < 0 || pos.Z > depth - 1 || pos.Z < 0)
