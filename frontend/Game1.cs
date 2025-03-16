@@ -179,6 +179,7 @@ public class Game1 : Game
 
         basicEffect.View = camera.view_matrix; //camera projections
         basicEffect.Projection = camera.projection_matrix;
+        basicEffect.World = Matrix.Identity;
 
         foreach (EffectPass pass in basicEffect.CurrentTechnique.Passes)
         {
@@ -194,16 +195,7 @@ public class Game1 : Game
         _spriteBatch.DrawString(font, camera.position.ToString(), new Vector2(screen_x - (camera.position.ToString().Length * 13),1), Color.WhiteSmoke, 0, Vector2.Zero, 0.3f, SpriteEffects.None, 0f);
 
         _spriteBatch.DrawString(font, sim.cells[0].ToString(), new Vector2(1, 30), Color.WhiteSmoke, 0, Vector2.Zero, 0.3f, SpriteEffects.None, 0f);
-
-        for(int j = 0; j < sim.streamLines.Length && j < 1; j++)
-        {
-            Vector3[] poses = sim.streamLines[j].getPositions();
-            for (int i = 0; i < poses.Length; i++)
-            {
-                _spriteBatch.DrawString(font, poses[i].ToString(), new Vector2(1 + (j * 100), 70 + (30 * i)), Color.GhostWhite, 0, Vector2.Zero, 0.2f, SpriteEffects.None, 0f);
-            }
-        }
-
+        
         _spriteBatch.End();
         base.Draw(gameTime);
     }

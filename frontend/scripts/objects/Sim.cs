@@ -8,40 +8,13 @@ public class Simulation : Object
 {
     public Vector4[] cells; // x, y, z   y+ is up
     public VoxelObject voxelObject;
-
-    public LineObject[] streamLines;
-    const int steps = 10; // the number of line segments each stream line should have 
-
+    public ArrowCollection flowArrows;
 
     public int width;
     public int height;
     public int depth;
 
-    public Simulation(GraphicsDevice graphics_device) : base(Vector3.One, Quaternion.Identity, graphics_device)
-    {
-        this.cells = new Vector4[] { new Vector4(0, 0, 0, 0) };
-
-        this.width = 1;
-        this.height = 1;
-        this.depth = 1;
-
-
-        Color[] colors = new Color[1];
-        Vector3[] positions = new Vector3[1];
-
-        for (int i = 0; i < this.cells.Length; i++)
-        {
-            colors[i] = new Color(this.cells[i].W, this.cells[i].W, this.cells[i].W);
-            positions[i] = this.Get3DPositionVec(i);
-        }
-
-        this.voxelObject = new VoxelObject(Vector3.Zero, Quaternion.Identity, positions, colors, 0.1f, graphics_device);
-
-        streamLines = new LineObject[0];
-        updateStreamLines();
-
-        this.graphics_device = graphics_device;
-    }
+    public Simulation(GraphicsDevice graphics_device) : this(new Vector4[] { Vector4.Zero }, 1, 1, 1, graphics_device) { }
 
     public Simulation(Vector4[] cells, int width, int height, int depth, GraphicsDevice graphics_device) : base(Vector3.One, Quaternion.Identity, graphics_device)
     {
@@ -61,9 +34,7 @@ public class Simulation : Object
         }
 
         this.voxelObject = new VoxelObject(Vector3.Zero, Quaternion.Identity, positions, colors, 0.1f, graphics_device);
-
-        streamLines = new LineObject[0];
-        updateStreamLines();
+        this.flowArrows = new ArrowCollection(width, height, depth, graphics_device);
 
         this.graphics_device = graphics_device;
     }
@@ -79,6 +50,8 @@ public class Simulation : Object
         Color[] colors = new Color[this.cells.Length];
         Vector3[] positions = new Vector3[this.cells.Length];
 
+        Vector3[] velocities = new Vector3[this.cells.Length];
+
         for (int i = 0; i < this.cells.Length; i++)
         {
             float colX = 1 - (1 / (1 + MathF.Abs(this.cells[i].X / 10f))); // 1 - 1/(1 + |x / 10|)
@@ -87,78 +60,21 @@ public class Simulation : Object
 
             colors[i] = new Color( colX, colY, colZ);
             positions[i] = this.Get3DPositionVec(i);
+
+            velocities[i] = new Vector3(new_cells[i].X, new_cells[i].Y, new_cells[i].Z);
         }
 
         this.voxelObject.SetData(positions, colors);
-        
-        updateStreamLines();
+        this.flowArrows.setData(velocities);        
     } 
 
 
-    override public void Draw(Effect effect)
+    override public void Draw(BasicEffect effect)
     {
         if(voxelObject is null) { return; }
 
         this.voxelObject.Draw(effect);
-
-        foreach(LineObject lineObject in streamLines) 
-        {
-            if(lineObject is null) { continue; }
-
-            lineObject.Draw(effect);
-        }
-    }
-
-    /// <summary>
-    /// update the line object collection, streamlines to match the velocities in the cells
-    /// </summary>
-    public void updateStreamLines()
-    {
-        if(height < 3 || depth < 3 || width < 3) { return; }
-
-        streamLines = new LineObject[(height-2) * (depth-2)];
-
-        for (int y = 1; y < height - 1; y++)
-        {
-            for (int z = 1; z < depth - 1; z++)
-            {
-                streamLines[(z-1) + ((y-1) * (height-2))] = new LineObject(new Vector3(1, y, z), Quaternion.Identity, graphics_device);
-            }
-        }
-
-        for(int i = 0; i < streamLines.Length; i++)
-        {
-            LineObject lineObject = streamLines[i];
-
-            Vector3[] positions = new Vector3[steps];
-
-            Vector3 pos = lineObject.position;
-            Vector3 velocity;
-
-            for(int j = 0; j < steps; j++) 
-            {
-                // position goes outside the sim, stop and copy the current to a new shorter array, and breal the loop
-                if(pos.X > width - 1 || pos.X < 0 || pos.Y > height - 1 || pos.Y < 0 || pos.Z > depth - 1 || pos.Z < 0)
-                {
-                    Vector3[] temp = positions;
-                    positions = new Vector3[j];
-                    for (int k = 0; k < positions.Length; k++)
-                    {
-                        positions[k] = temp[k];
-                    }
-
-                    break;
-                }
-
-                positions[j] = pos;
-
-                velocity = getVelocityAtPosition(pos);
-                velocity.Normalize();
-                pos += velocity;
-            }
-
-            lineObject.SetData(positions);
-        }
+        this.flowArrows.Draw(effect);
     }
 
     public (int x, int y, int z) Get3DPosition(int index)
@@ -178,17 +94,22 @@ public class Simulation : Object
 
     public Vector3 getVelocityAtPosition(float x, float y, float z)
     {
-        return getVelocityAtPosition(new Vector3(x, y, z));
+        return getVelocityAtLocalPosition(new Vector3(x, y, z));
     }
 
-    public Vector3 getVelocityAtPosition(Vector3 pos)
+    /// <summary>
+    /// uses trilinear interpolation to find the velocity at an arbitary position inside the simulation,
+    /// using local coordantes  
+    /// </summary>
+    /// <param name="pos"> the position to get the interpolated velocity at, cannot be outside the bounds of the simulation </param>
+    /// <returns> the linear interpolated velocity at the position</returns>
+    /// <exception cref="System.ArgumentException"></exception>
+    /// <exception cref="System.ArgumentOutOfRangeException"></exception>
+    public Vector3 getVelocityAtLocalPosition(Vector3 pos)
     {
         if(pos.X is float.NaN || pos.Y is float.NaN || pos.Z is float.NaN)
         {
-            Console.WriteLine($"At least one of the components of the argument {pos.ToString()} is NaN");
-            pos.X = pos.X is float.NaN ? 0.0f : pos.X;
-            pos.Y = pos.Y is float.NaN ? 0.0f : pos.Y;
-            pos.Z = pos.Z is float.NaN ? 0.0f : pos.Z;
+            throw new System.ArgumentException($"At least one of the components of the passed argument {pos.ToString()} is NaN");
         }
 
         if(pos.X > width - 1 || pos.X < 0 || pos.Y > height - 1 || pos.Y < 0 || pos.Z > depth - 1 || pos.Z < 0)

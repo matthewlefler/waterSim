@@ -1,8 +1,3 @@
-using System;
-using System.ComponentModel;
-using System.Diagnostics;
-using System.Reflection;
-using System.Threading;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -23,7 +18,7 @@ public abstract class Object
         this.graphics_device = graphics_device;
     }
 
-    public abstract void Draw(Effect effect);
+    public abstract void Draw(BasicEffect effect);
 }
 
 /// <summary>
@@ -154,7 +149,7 @@ public class VoxelObject : Object
         this.index_buffer.SetData<short>(indices);
     }
 
-    public override void Draw(Effect effect)
+    public override void Draw(BasicEffect effect)
     {
         graphics_device.SetVertexBuffer(this.vertex_buffer);
         graphics_device.Indices = index_buffer;
@@ -203,12 +198,12 @@ public class LineObject : Object
         vertex_buffer.SetData<VertexPositionColor>(vertices);
     }
 
-    public override void Draw(Effect effect)
+    public override void Draw(BasicEffect effect)
     {
         if(line_points.Length < 2) { return; }
 
         graphics_device.SetVertexBuffer(vertex_buffer);
-        effect.Parameters["World"].SetValue(Matrix.CreateTranslation(this.position));
+        effect.World = Matrix.CreateTranslation(this.position);
 
         foreach(EffectPass pass in effect.CurrentTechnique.Passes) 
         {

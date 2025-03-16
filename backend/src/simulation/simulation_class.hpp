@@ -17,7 +17,7 @@
 
 // will turn on/off related functions that print out degub information
 // such as the read_out_values function
-const bool DEBUG = true;
+const bool DEBUG = false;
 
 //<-- TEMPERARY DEBUGGING FUNCTION !-->
 // Our simple asynchronous handler function
@@ -204,8 +204,7 @@ class Simulation
         
         // this changes the time it takes for the fluid to relax back to the equlibrium state
         // is related semi-directly to the fluid's viscosity 
-        // use values above 1.0f
-        float tau = 4.2f;
+        float tau = 0.2f;
 
         ///////////////////////////////////////////////
         // macroscopic variables                     //
@@ -292,7 +291,7 @@ class Simulation
                 }
                 else 
                 {
-                    device_accessor_discrete_density_buffer_1[i] = device_accessor_velocities_weights[i % 27];
+                    device_accessor_discrete_density_buffer_1[i] = 1.0f;
                 }
             });
         }).wait();
@@ -427,7 +426,7 @@ class Simulation
 
         float local_tau = this->tau;
 
-        int local_possible_velocities_number = this->possible_velocities_number;
+        int local_possible_velocities_count = this->possible_velocities_number;
 
         // read out macroscopic variables for debugging purposes
         read_out_values(this->discrete_density_buffer_1, 27);
@@ -457,7 +456,7 @@ class Simulation
                 // loop over all the vectors and grab the particles that will move to the current node,
                 // and assign them to the associated velocity on the current node
                 // also skip the velocity with value (0, 0, 0) as it does not change
-                for (uint8_t i = 1; i < local_possible_velocities_number; i++)
+                for (uint8_t i = 1; i < local_possible_velocities_count; i++)
                 {
                     // get where the particles are coming from
                     // if the position to get the particles from is out of bounds it wraps around (the modulo operation)
@@ -491,9 +490,9 @@ class Simulation
             h.parallel_for(*this->node_count, [=](sycl::id<1> node_index) 
             {
                 float node_density = 0.0f;
-                for (uint8_t i = 0; i < local_possible_velocities_number; i++)
+                for (uint8_t i = 0; i < local_possible_velocities_count; i++)
                 {
-                    node_density += device_accessor_discrete_density_buffer_2[node_index * local_possible_velocities_number + i];
+                    node_density += device_accessor_discrete_density_buffer_2[node_index * local_possible_velocities_count + i];
                 }
                 
                 device_accessor_macro_density[node_index] = node_density;
@@ -527,7 +526,7 @@ class Simulation
                 float macro_velocity_y = 0.0f;
                 float macro_velocity_z = 0.0f;
 
-                for (int i = 0; i < 27; i++)
+                for (int i = 0; i < local_possible_velocities_count; i++)
                 {
                     macro_velocity_x += device_accessor_discrete_density_buffer_2[node_index * 27 + i] * device_accessor_possible_velocities[i * 3];
                     macro_velocity_y += device_accessor_discrete_density_buffer_2[node_index * 27 + i] * device_accessor_possible_velocities[i * 3 + 1];
@@ -576,7 +575,7 @@ class Simulation
 
             h.parallel_for(*this->discrete_density_buffer_length, [=](sycl::id<1> i) 
             { 
-                int local_velocity_index = i % local_possible_velocities_number;
+                int local_velocity_index = i % local_possible_velocities_count;
                 int node_index = i / 27;
 
                 float weight = device_accessor_velocities_weights[local_velocity_index];
@@ -592,7 +591,7 @@ class Simulation
                     device_accessor_macro_velocity_z[node_index]  // node specific avg velocity
                 );
 
-                device_accessor_discrete_density_buffer_1[i] = device_accessor_velocity_buffer_2[i] + ((e - device_accessor_velocity_buffer_2[i]) / local_tau);
+                device_accessor_discrete_density_buffer_1[i] = (device_accessor_velocity_buffer_2[i] * (1 - local_tau)) + (e * local_tau);
             });
         }).wait();
 
@@ -615,7 +614,7 @@ class Simulation
                 float vec_y = 0.0f;
                 float vec_z = 0.0f;
 
-                for(uint8_t i; i < local_possible_velocities_number; ++i)
+                for(uint8_t i; i < local_possible_velocities_count; ++i)
                 {
                     vec_x += device_accessor_velocities_weights[i] * device_accessor_possible_velocities[i * 3];
                     vec_y += device_accessor_velocities_weights[i] * device_accessor_possible_velocities[i * 3 + 1];
@@ -664,6 +663,12 @@ class Simulation
     sycl::range<3> get_dimensions()
     {
         return sycl::range(*this->dims);
+    }
+
+    // returns the number of nodes in this simulation
+    int get_node_count() 
+    {
+        return this->node_count->get(0);
     }
 };
 
