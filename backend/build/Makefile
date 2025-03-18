@@ -129,29 +129,29 @@ main/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/build
 .PHONY : main/fast
 
-src/main.o: src/main.cpp.o
-.PHONY : src/main.o
+src/save_to_file.o: src/save_to_file.cpp.o
+.PHONY : src/save_to_file.o
 
 # target to build an object file
-src/main.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/main.cpp.o
-.PHONY : src/main.cpp.o
+src/save_to_file.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/save_to_file.cpp.o
+.PHONY : src/save_to_file.cpp.o
 
-src/main.i: src/main.cpp.i
-.PHONY : src/main.i
+src/save_to_file.i: src/save_to_file.cpp.i
+.PHONY : src/save_to_file.i
 
 # target to preprocess a source file
-src/main.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/main.cpp.i
-.PHONY : src/main.cpp.i
+src/save_to_file.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/save_to_file.cpp.i
+.PHONY : src/save_to_file.cpp.i
 
-src/main.s: src/main.cpp.s
-.PHONY : src/main.s
+src/save_to_file.s: src/save_to_file.cpp.s
+.PHONY : src/save_to_file.s
 
 # target to generate assembly for a file
-src/main.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/main.cpp.s
-.PHONY : src/main.cpp.s
+src/save_to_file.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/save_to_file.cpp.s
+.PHONY : src/save_to_file.cpp.s
 
 # Help Target
 help:
@@ -162,9 +162,9 @@ help:
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
 	@echo "... main"
-	@echo "... src/main.o"
-	@echo "... src/main.i"
-	@echo "... src/main.s"
+	@echo "... src/save_to_file.o"
+	@echo "... src/save_to_file.i"
+	@echo "... src/save_to_file.s"
 .PHONY : help
 
 

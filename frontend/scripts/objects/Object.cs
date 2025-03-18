@@ -1,3 +1,5 @@
+using System.Collections;
+using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -74,7 +76,7 @@ public class VoxelObject : Object
     {
         if(voxel_colors.Length != voxel_positions.Length)
         {
-            throw new System.ArgumentException($"voxel object set data, voxel colors length does not match voxel positions length \n positions length: {voxel_positions.Length} colors length: {voxel_colors.Length}");
+            throw new System.ArgumentException($"in voxel object set data, voxel colors length does not match voxel positions length \n positions length: {voxel_positions.Length}, colors length: {voxel_colors.Length}");
         }
 
         this.voxel_cube_offsets = voxel_positions;
@@ -207,6 +209,7 @@ public class LineObject : Object
 
         foreach(EffectPass pass in effect.CurrentTechnique.Passes) 
         {
+            pass.Apply();
             graphics_device.DrawPrimitives(PrimitiveType.LineStrip, 0, line_points.Length - 1);
         }
     }

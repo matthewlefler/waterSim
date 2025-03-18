@@ -26,8 +26,9 @@ int main()
 
     sycl::range<3> tempDims = sim.get_dimensions();
     
-    //                              port #, data pointer,   width,           height,          depth
-    Messenger messenger = Messenger(4331, sim.vector_array, tempDims.get(0), tempDims.get(1), tempDims.get(2));
+    //                                                     port #, data pointer,   width,           height,          depth
+    Messenger velocity_messenger = Messenger<sycl::float4>(4000, sim.vector_array, tempDims.get(0), tempDims.get(1), tempDims.get(2));
+    Messenger density_messenger = Messenger<float>(4001, sim.density_array, tempDims.get(0), tempDims.get(1), tempDims.get(2));
 
     // messenger test 
     // sycl::float4 * tempTestData = new sycl::float4[2];
@@ -50,7 +51,7 @@ int main()
 
         sim.next_frame(1.0f);
 
-        if(count > 200) { exit.store(true); }
+        if(count > 1000) { exit.store(true); }
 
         if(exit.load())
         {
@@ -58,7 +59,7 @@ int main()
             break;
         }
 
-        sleep(1);// !!! REMOVE IF NOT DEBUGGING !!! REMOVE IF NOT DEBUGGING !!! REMOVE IF NOT DEBUGGING !!! REMOVE IF NOT DEBUGGING !!! REMOVE IF NOT DEBUGGING !!! REMOVE IF NOT DEBUGGING !!! REMOVE IF NOT DEBUGGING !!!
+        sleep(1); // !!! REMOVE IF NOT DEBUGGING !!! REMOVE IF NOT DEBUGGING !!! REMOVE IF NOT DEBUGGING !!! REMOVE IF NOT DEBUGGING !!! REMOVE IF NOT DEBUGGING !!! REMOVE IF NOT DEBUGGING !!! REMOVE IF NOT DEBUGGING !!!
         ++count;
     }
 

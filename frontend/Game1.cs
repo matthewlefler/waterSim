@@ -1,12 +1,15 @@
-﻿using Microsoft.Xna.Framework;
+﻿using System;
+
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 
-using Messengers;
-using System;
-using Objects;
 using MonoGame.Extended.BitmapFonts;
+
+using Messengers;
 using Cameras;
+using Objects;
+using Levels;
 
 namespace frontend;
 
@@ -36,9 +39,7 @@ public class Game1 : Game
 
     SimpleCamera camera;
 
-    private Messenger messenger;
-
-    private Simulation sim;
+    private ILevel current_level;
 
     public Game1()
     {
@@ -47,11 +48,18 @@ public class Game1 : Game
         IsMouseVisible = false;
     }
 
+    public void setLevel(ILevel level)
+    {
+        this.current_level = level;
+    }
+
     protected override void Initialize()
     {
+
         _graphics.PreferredBackBufferHeight = 1300;
         _graphics.PreferredBackBufferWidth = 1300;
         _graphics.ApplyChanges();
+        
         
         screen_x = _graphics.PreferredBackBufferWidth;
         screen_y = _graphics.PreferredBackBufferHeight;
@@ -61,19 +69,20 @@ public class Game1 : Game
         Console.WriteLine("screen width: " + screen_x + " screen height: " + screen_y);
 
         // TODO: Add your initialization logic here
-
-        Console.WriteLine("Initalizing simulation object");
-        sim= new Simulation(GraphicsDevice);
-        Console.WriteLine("Done");
-
-        Console.WriteLine("Starting network data messenger");
-
-        messenger = new Messenger(4331);
-        messenger.connect();
-
-        Console.WriteLine("Started network data messenger");
+        current_level = new LevelSelector(screen_x, screen_y, this);
 
         camera = new SimpleCamera(Vector3.Backward * 2);
+
+        LevelSelector levelSelector = new LevelSelector(screen_x, screen_y, this);
+
+        levelSelector.addLevel(new ReadFileLevel("/home/lefler/Documents/gitRepos/waterSim/backend/build/test.txt", GraphicsDevice));
+
+        levelSelector.addLevel(new NetworkedSimulation(GraphicsDevice));
+
+        current_level = levelSelector;        
+
+        current_level.init();
+
 
         base.Initialize();
 
@@ -83,6 +92,8 @@ public class Game1 : Game
     protected override void LoadContent()
     {
         _spriteBatch = new SpriteBatch(GraphicsDevice);
+
+        current_level.load_content(Content, GraphicsDevice);
 
         // TODO: use this.Content to load your game content here
         tex = Content.Load<Texture2D>("white");
@@ -149,14 +160,7 @@ public class Game1 : Game
 
         camera.Rotate((screen_middle.X - mouse.X) * dt * 0.2f, (screen_middle.Y - mouse.Y) * dt * 0.2f);
 
-        if(messenger.connected) 
-        {
-            messenger.read(sim); 
-        }
-        else
-        { 
-            messenger.connect(); 
-        }
+        current_level.update(dt, keyboard, last_keyboard, camera);
 
         // TODO: Add your update logic here
 
@@ -177,9 +181,9 @@ public class Game1 : Game
         basicEffect.AmbientLightColor = new Vector3(0.5f,0.5f,0.5f);
         basicEffect.EmissiveColor = new Vector3(0.5f, 0.5f, 0.5f);
 
-        basicEffect.View = camera.view_matrix; //camera projections
-        basicEffect.Projection = camera.projection_matrix;
         basicEffect.World = Matrix.Identity;
+
+        current_level.draw(basicEffect, GraphicsDevice, _spriteBatch, camera);
 
         foreach (EffectPass pass in basicEffect.CurrentTechnique.Passes)
         {
@@ -188,24 +192,17 @@ public class Game1 : Game
             GraphicsDevice.DrawUserPrimitives(PrimitiveType.LineList, origin_axii_lines, 0, 3);
         }
         
-        sim.Draw(basicEffect);
-
         _spriteBatch.DrawString(font, frame_rate.ToString(), Vector2.One, Color.WhiteSmoke, 0, Vector2.Zero, 0.3f, SpriteEffects.None, 0f);
 
         _spriteBatch.DrawString(font, camera.position.ToString(), new Vector2(screen_x - (camera.position.ToString().Length * 13),1), Color.WhiteSmoke, 0, Vector2.Zero, 0.3f, SpriteEffects.None, 0f);
 
-        _spriteBatch.DrawString(font, sim.cells[0].ToString(), new Vector2(1, 30), Color.WhiteSmoke, 0, Vector2.Zero, 0.3f, SpriteEffects.None, 0f);
-        
         _spriteBatch.End();
         base.Draw(gameTime);
     }
 
     protected override void EndRun()
     {
-        if(messenger.connected)
-        {
-            messenger.close();
-        }
+        current_level.close();
 
         base.EndRun();
     }

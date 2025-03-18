@@ -1,18 +1,26 @@
-/*   
-packet -> id for 2 byte | size of size for 1 bytes | size of ??? bytes | msg with a number of bytes equal to size
-    
-    the id will increment over time meaning generarlly higher ids will be newer
-        first byte is for error codes / status codes
-        second byte for id number (for debugging, count time since last, etc.)
+/**
+    name: sockets.h
+    author: matt l
+        slack: @skye 
 
-    size of size is the size of the part holding the size of the rest of the message
-        allows for highly varing sizes going from 0 to 2^255 bytes
-    
-    size of the msg from 1 to 2^255 bytes long
-        can hold any number of things
-        ie: (float4) = 4 * 8 bytes or 32 bytes per float 4 
+    usecase:
+        defines and provides functions for using ip sockets
 
-    first byte id
+    packet 1 -> id for 2 byte | size of size for 1 bytes | size of msg for ?? bytes | totals 1024 bytes
+    packet 2 to n -> msg with a number of bytes equal to size
+        
+        the id will increment over time meaning generarlly higher ids will be newer
+            first byte is for error codes / status codes
+            second byte increases per iteration
+
+        size of size is the size of the part holding the size of the rest of the message
+            allows for highly varing sizes going from 0 to 2^255 bytes
+        
+        size of the msg from 0 to 2^255 bytes long
+            can hold any number of things
+            ie: (float4) = 4 * 8 bytes or 32 bytes per float 4 
+
+    first byte id number and meaning 
     0 -> a test of connection aka is the other side on and working? similar to a ping, should receive: "hi, I am: {name of computer}"
          only includes the first two bytes b/c the rest is unnessesary, (may help find bugs later too) 
     1 -> normal data of the (currently water) simulation
@@ -21,19 +29,12 @@ packet -> id for 2 byte | size of size for 1 bytes | size of ??? bytes | msg wit
 
 // A C# program for Client sockets
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Net;
 using System.Net.Sockets;
-using System.Security.Claims;
-using System.Security.Cryptography.X509Certificates;
-using Microsoft.Xna.Framework;
-using Objects;
 
 namespace Messengers;
 
-public class Messenger
+public class Messenger<T>
 {
     readonly byte[] basicMessage = 
     { 
@@ -61,20 +62,26 @@ public class Messenger
 
     public bool connected = false;
 
-    public Messenger(int port) 
-    {
-        // Establish the remote endpoint 
-            // for the socket. This example 
-            // uses port {port} on the local 
-            // computer.
-            Console.WriteLine("Will connect to: " + IPAddress.Loopback.ToString() + " and port: " + port.ToString());
-            this.ipAddr = IPAddress.Loopback;
-            this.endPoint = new IPEndPoint(ipAddr, port);
+    private Func<byte[], T[]> converter_func;
+    private Action<T[], int, int, int> set_action;
 
-            // Creation UDP/IP Socket using 
-            // Socket Class Constructor
-            this.socket = new Socket(this.ipAddr.AddressFamily,
-                       SocketType.Stream, ProtocolType.Tcp);   //<--- tcp and type
+    public Messenger(int port, Func<byte[], T[]> converter_func, Action<T[], int, int, int> set_action) 
+    {
+        this.converter_func = converter_func;
+        this.set_action = set_action;
+
+        // Establish the remote endpoint 
+        // for the socket. This example 
+        // uses port {port} on the local 
+        // computer.
+        Console.WriteLine("Will connect to: " + IPAddress.Loopback.ToString() + " and port: " + port.ToString());
+        this.ipAddr = IPAddress.Loopback;
+        this.endPoint = new IPEndPoint(ipAddr, port);
+
+        // Creation UDP/IP Socket using 
+        // Socket Class Constructor
+        this.socket = new Socket(this.ipAddr.AddressFamily,
+                   SocketType.Stream, ProtocolType.Tcp);   //<--- tcp and type
     }
 
     /// <summary>
@@ -105,7 +112,7 @@ public class Messenger
             Console.WriteLine($"Messenger connected at {this.socket.RemoteEndPoint.ToString()}");
         }
 
-        // Manage of Socket's Exceptions
+        // Manage the Socket's Exceptions
         catch
         {
             // continue 
@@ -133,8 +140,7 @@ public class Messenger
     /// pokes the server for data and then sets the sim's data to the decoded received data
     /// if the transfer of data failes or is corrupted no data is changed and the function returns immediatly
     /// </summary>
-    /// <param name="sim"> the simulation which holds the data to change </param>
-    public void read(Simulation sim) 
+    public void read() 
     {
         if(!connected) { return; }
 
@@ -165,16 +171,15 @@ public class Messenger
 
         int sizeOfSize = buffer[2];
 
-        byte[] sizeArr = new byte[] { 0, 0, 0, 0, 0, 0, 0, 0 }; 
+        byte[] sizeArr = { 0, 0, 0, 0, 0, 0, 0, 0 }; 
 
         for (int i = 0; i < sizeOfSize; i++)
         {
             sizeArr[i] = buffer[i + 3];
         }
 
-        int data_size = BitConverter.ToInt32(sizeArr);
-        int data_byte_size = data_size * 16;
-
+        int data_byte_size = BitConverter.ToInt32(sizeArr);
+        
         //receive the data of the msg
         // counts the number of times data is recieved
         byte[] data = new byte[data_byte_size];
@@ -219,21 +224,15 @@ public class Messenger
             }
         }
 
-        // init an appropiately sized 2 dimenional array to hold the decrypted data
-        Vector4[] sim_data = new Vector4[this.simWidth * this.simHeight * this.simDepth];
 
-        Vector4 temp;
-        for (int i = 0, j = 0; j < data_size; i+=16, j++)
-        {
-            // float = 4 bytes
-            temp.X = BitConverter.ToSingle(data, i); // i to i + 3 
-            temp.Y = BitConverter.ToSingle(data, i + 4); // i + 4 to i + 7
-            temp.Z = BitConverter.ToSingle(data, i + 8); // i + 8 to i + 11
-            temp.W = BitConverter.ToSingle(data, i + 12); // i + 12 to i + 15
+        // init an appropiately sized 1 dimenional array to hold the decrypted data
+        T[] sim_data = new T[this.simWidth * this.simHeight * this.simDepth];
 
-            sim_data[j] = temp;
-        }
-        sim.SetData(sim_data, this.simWidth, this.simHeight, this.simDepth);
+        // convert the byte array to the type array
+        sim_data = converter_func(data);
+
+        // call the action to do something with the decrypted data
+        set_action(sim_data, simWidth, simHeight, simDepth);
     }
 
 #nullable disable

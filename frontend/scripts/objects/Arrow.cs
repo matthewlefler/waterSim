@@ -132,19 +132,21 @@ public class ArrowCollection : Object
 
         for (int i = 0; i < arrows.Length; i++)
         {
-            Vector3 position = new Vector3(i % width, i % width * height, i / (width * height));
+            Vector3 position = new Vector3(i % width, i / width % height, i / (width * height));
             arrows[i] = new Arrow(position, Vector3.UnitX, Color.White, graphics_device);
         }
     }
 
     public void setData(Vector3[] directions) 
     {
-        for (int i = 0; i < arrows.Length; i++)
+        for (int i = 0; i < directions.Length; i++)
         {
             float magnitude = directions[i].Length();
-            Vector3 direction = Vector3.Normalize(directions[i]);
+            Vector3 direction = Vector3.Normalize(directions[i]) * 0.8f;
 
             Color color = Color.Lerp(start, end, MathF.Min(magnitude / range, 1.0f));
+
+            if(magnitude <= 0) { color = Color.Bisque; direction = Vector3.Right * 0.2f; }
             
             arrows[i].setDirection(direction, color);
         }

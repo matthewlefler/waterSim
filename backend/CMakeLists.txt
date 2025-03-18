@@ -10,7 +10,7 @@ set(CMAKE_BUILD_TYPE "debug")
 set(COMPILE_FLAGS "-fsycl -g")
 set(LINK_FLAGS "-fsycl -g")
 
-add_executable(main src/main.cpp)
+add_executable(main src/save_to_file.cpp)
 
 set_target_properties(main PROPERTIES COMPILE_FLAGS ${COMPILE_FLAGS})
 set_target_properties(main PROPERTIES LINK_FLAGS ${LINK_FLAGS})

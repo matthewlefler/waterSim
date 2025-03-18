@@ -6,7 +6,14 @@ namespace Objects;
 
 public class Simulation : Object
 {
-    public Vector4[] cells; // x, y, z   y+ is up
+    // x, y, z  y+ is up
+    // flattened 3d array
+    public Vector3[] velocities; 
+    public float[] densities; 
+
+    private static Color density_color_start = Color.Blue;
+    private static Color density_color_end = Color.Purple;
+
     public VoxelObject voxelObject;
     public ArrowCollection flowArrows;
 
@@ -14,59 +21,92 @@ public class Simulation : Object
     public int height;
     public int depth;
 
-    public Simulation(GraphicsDevice graphics_device) : this(new Vector4[] { Vector4.Zero }, 1, 1, 1, graphics_device) { }
+    public Simulation(GraphicsDevice graphics_device) : this(new Vector3[] { Vector3.Zero }, new float[] { 0.0f }, 1, 1, 1, graphics_device) { }
 
-    public Simulation(Vector4[] cells, int width, int height, int depth, GraphicsDevice graphics_device) : base(Vector3.One, Quaternion.Identity, graphics_device)
+    public Simulation(Vector3[] velocities, float[] densities, int width, int height, int depth, GraphicsDevice graphics_device) : base(Vector3.One, Quaternion.Identity, graphics_device)
     {
-        this.cells = cells;
+        this.velocities = velocities;
+        this.densities = densities;
 
         this.width = width;
         this.height = height;
         this.depth = depth;
 
-        Color[] colors = new Color[this.cells.Length];
-        Vector3[] positions = new Vector3[this.cells.Length];
+        Color[] colors = new Color[this.velocities.Length];
+        Vector3[] positions = new Vector3[this.velocities.Length];
 
-        for (int i = 0; i < this.cells.Length; i++)
+        for (int i = 0; i < this.velocities.Length; i++)
         {
-            colors[i] = new Color(this.cells[i].W, this.cells[i].W, this.cells[i].W);
-            positions[i] = this.Get3DPositionVec(i);
+            colors[i] = Color.Lerp(density_color_start, density_color_end, densities[i] / 10f);
+            positions[i] = this.Get3DPositionVector(i);
         }
 
         this.voxelObject = new VoxelObject(Vector3.Zero, Quaternion.Identity, positions, colors, 0.1f, graphics_device);
+
         this.flowArrows = new ArrowCollection(width, height, depth, graphics_device);
+        this.flowArrows.setData(velocities);
 
         this.graphics_device = graphics_device;
     }
 
-    public void SetData(Vector4[] new_cells, int width, int height, int depth)
+    public void SetVelocity(Vector3[] new_velocities, int width, int height, int depth)
     {
-        this.cells = new_cells;
+        this.velocities = new_velocities;
+
+        this.width = width;
+        this.height = height;
+        this.depth = depth;
+        
+        this.flowArrows = new ArrowCollection(width, height, depth, graphics_device);
+        this.flowArrows.setData(new_velocities);        
+    } 
+
+    public void SetDensity(float[] new_densities, int width, int height, int depth) 
+    {
+        this.densities = new_densities; 
 
         this.width = width;
         this.height = height;
         this.depth = depth;
 
-        Color[] colors = new Color[this.cells.Length];
-        Vector3[] positions = new Vector3[this.cells.Length];
+        Color[] colors = new Color[new_densities.Length];
+        Vector3[] positions = new Vector3[new_densities.Length];
 
-        Vector3[] velocities = new Vector3[this.cells.Length];
-
-        for (int i = 0; i < this.cells.Length; i++)
+        // get maximum density
+        float maximum_density = 0.0f;
+        foreach(float d in densities)
         {
-            float colX = 1 - (1 / (1 + MathF.Abs(this.cells[i].X / 10f))); // 1 - 1/(1 + |x / 10|)
-            float colY = 1 - (1 / (1 + MathF.Abs(this.cells[i].Y / 10f)));
-            float colZ = 1 - (1 / (1 + MathF.Abs(this.cells[i].Z / 10f)));
+            if(d > maximum_density)
+            {
+                maximum_density = d;
+            }
+        }
+        
+        // get minimum density
+        float minimum_density = maximum_density;
+        foreach(float d in densities)
+        {
+            if(d < minimum_density)
+            {
+                minimum_density = d;
+            }
+        }
 
-            colors[i] = new Color( colX, colY, colZ);
-            positions[i] = this.Get3DPositionVec(i);
+        for (int i = 0; i < new_densities.Length; i++)
+        {
+            float t = (new_densities[i] - minimum_density) / maximum_density;
 
-            velocities[i] = new Vector3(new_cells[i].X, new_cells[i].Y, new_cells[i].Z);
+            static float expLerp(float t)
+            {
+                return t > 1 ? 1 : 1 - MathF.Pow(2, -10*t);
+            }
+
+            colors[i] = Color.Lerp(density_color_start, density_color_end, expLerp(t));
+            positions[i] = this.Get3DPositionVector(i);
         }
 
         this.voxelObject.SetData(positions, colors);
-        this.flowArrows.setData(velocities);        
-    } 
+    }
 
 
     override public void Draw(BasicEffect effect)
@@ -74,7 +114,7 @@ public class Simulation : Object
         if(voxelObject is null) { return; }
 
         this.voxelObject.Draw(effect);
-        this.flowArrows.Draw(effect);
+        // this.flowArrows.Draw(effect);
     }
 
     public (int x, int y, int z) Get3DPosition(int index)
@@ -82,7 +122,7 @@ public class Simulation : Object
         return (index % width, index / width % height, index / (width * height));
     } 
 
-    public Vector3 Get3DPositionVec(int index)
+    public Vector3 Get3DPositionVector(int index)
     {
         return new Vector3(index % width, index / width % height, index / (width * height));
     }  
@@ -130,15 +170,15 @@ public class Simulation : Object
         float zDec = pos.Z - minZ;
 
         //trilinear interpolation
-        Vector4 value = (
+        Vector3 value = (
         (
-        (cells[GetIndex(minX, minY, minZ)] * (yDec) + cells[GetIndex(minX, maxY, minZ)] * (1-yDec)) * (xDec) +
-        (cells[GetIndex(maxX, minY, minZ)] * (yDec) + cells[GetIndex(maxX, maxY, minZ)] * (1-yDec)) * (1-xDec)
+        (velocities[GetIndex(minX, minY, minZ)] * (yDec) + velocities[GetIndex(minX, maxY, minZ)] * (1-yDec)) * (xDec) +
+        (velocities[GetIndex(maxX, minY, minZ)] * (yDec) + velocities[GetIndex(maxX, maxY, minZ)] * (1-yDec)) * (1-xDec)
         ) 
         * (zDec) +
         (
-        (cells[GetIndex(minX, minY, maxZ)] * (yDec) + cells[GetIndex(minX, maxY, minZ)] * (1-yDec)) * (xDec) + 
-        (cells[GetIndex(maxX, minY, maxZ)] * (yDec) + cells[GetIndex(maxX, maxY, minZ)] * (1-yDec)) * (1-xDec)
+        (velocities[GetIndex(minX, minY, maxZ)] * (yDec) + velocities[GetIndex(minX, maxY, minZ)] * (1-yDec)) * (xDec) + 
+        (velocities[GetIndex(maxX, minY, maxZ)] * (yDec) + velocities[GetIndex(maxX, maxY, minZ)] * (1-yDec)) * (1-xDec)
         ) 
         * (1-zDec)
         );

@@ -204,21 +204,23 @@ class Simulation
         
         // this changes the time it takes for the fluid to relax back to the equlibrium state
         // is related semi-directly to the fluid's viscosity 
-        float tau = 0.2f;
+        // a value above 0 and at most 1
+        float tau = 3f;
 
         ///////////////////////////////////////////////
         // macroscopic variables                     //
         // Used in the collision operator of the LBM //
         ///////////////////////////////////////////////
         
+        float * density_array_1; 
+        float * density_array_2; 
+
         sycl::buffer<float, 1> * macro_density_buffer; // the macroscopic density (one per node)
         sycl::buffer<float, 1> * macro_velocity_x; // the x component of the macroscopic velocity (one per node)
         sycl::buffer<float, 1> * macro_velocity_y; // the y component of the macroscopic velocity (one per node)
         sycl::buffer<float, 1> * macro_velocity_z; // the z component of the macroscopic velocity (one per node)
 
-        /////////////////////////////////////////////////////////////////
-        // stable host instance of the discrete_density_buffer_1 array //
-        /////////////////////////////////////////////////////////////////
+
 
         // copy 1 of the vectors data  
         sycl::float4* vectors1;
@@ -233,8 +235,14 @@ class Simulation
         bool which_vectors_array = false;
 
     public:
-        // a value containing a pointer to the current descrete density array
+        /////////////////////////////////////////////////////////////////////////
+        // stable host instances of the macroscopic velocity and density array //
+        /////////////////////////////////////////////////////////////////////////
+
+        // a value containing a pointer to the current macroscopic velocity array
         std::atomic<sycl::float4*> vector_array; 
+        // a value containing a pointer to the current macroscopic density array
+        std::atomic<float*> density_array; 
 
     //constructor
     Simulation(int width, int height, int depth)
@@ -270,10 +278,20 @@ class Simulation
         this->macro_velocity_y = new sycl::buffer<float, 1>(*this->node_count);
         this->macro_velocity_z = new sycl::buffer<float, 1>(*this->node_count);
 
+
+        // host side density arrays
+        this->density_array_1 = new float[this->node_count->get(0)];
+        this->density_array_2 = new float[this->node_count->get(0)];
+        
+        // public facing macro density array
+        this->density_array.store(density_array_1);
+        
+        // public facing macro velocity array
         this->vectors = new sycl::buffer<sycl::float4, 1>(*this->node_count);
 
-        this->vectors1 = new sycl::float4[node_count->get(0)];
-        this->vectors2 = new sycl::float4[node_count->get(0)];
+        // host side velocity arrays
+        this->vectors1 = new sycl::float4[this->node_count->get(0)];
+        this->vectors2 = new sycl::float4[this->node_count->get(0)];
 
         this->vector_array = vectors1;
 
@@ -285,9 +303,9 @@ class Simulation
 
             h.parallel_for(*this->discrete_density_buffer_length, [=](sycl::id<1> i) 
             {
-                if(i / 27 == 0) 
+                if(i / 27 == (width / 2) + (height / 2) * width + (depth / 2) * width * height ) 
                 {
-                    device_accessor_discrete_density_buffer_1[i] = 10.0f;
+                    if(i % 27 == 0) { device_accessor_discrete_density_buffer_1[i] = 100.0f; }
                 }
                 else 
                 {
@@ -356,11 +374,47 @@ class Simulation
 
             h.copy(device_accessor_vectors, vectors2);
         }).wait();
+
+        // initalize the macro density buffer 
+        this->q.submit([&](sycl::handler& h) 
+        {
+            sycl::accessor<float, 1, sycl::access_mode::read> device_accessor_discrete_density_buffer_1(*this->discrete_density_buffer_1, h);
+            sycl::accessor<float, 1, sycl::access_mode::write> device_accessor_macro_density_buffer(*this->macro_density_buffer, h);
+
+            h.parallel_for(*this->node_count, [=](sycl::id<1> i) 
+            {
+                float density = 0.0f;
+                for (uint8_t i = 0; i < possible_velocities_number; i++)
+                {
+                    density += device_accessor_discrete_density_buffer_1[i * 27 + i];
+                }
+
+                device_accessor_macro_density_buffer[i] = density;
+            });
+        }).wait();
+
+        this->q.submit([&](sycl::handler& h) 
+        {
+            sycl::accessor<float, 1, sycl::access_mode::read> device_accessor_density(*this->macro_density_buffer, h);
+
+            h.copy(device_accessor_density, density_array_1);
+        }).wait();
+
+        this->q.submit([&](sycl::handler& h) 
+        {
+            sycl::accessor<float, 1, sycl::access_mode::read> device_accessor_density(*this->macro_density_buffer, h);
+
+            h.copy(device_accessor_density, density_array_2);
+        }).wait();
+
+        q.wait();
     }
 
     // deconstructor
     ~Simulation()
     {
+        q.wait();
+
         // free the allocated memory on the device / host
         free(this->changeable_buffer, q); 
         free(this->possible_velocities_buffer, q);
@@ -640,6 +694,15 @@ class Simulation
                 this->vector_array = vectors1;
                 this->which_vectors_array = !this->which_vectors_array;
             }).wait();
+            
+            this->q.submit([&](sycl::handler& h) 
+            {
+                sycl::accessor<float, 1, sycl::access_mode::read> device_accessor_density(*this->macro_density_buffer, h);
+
+                h.copy(device_accessor_density, density_array_1);
+
+                this->density_array.store(density_array_1);
+            }).wait();
         }
         else
         {
@@ -651,6 +714,15 @@ class Simulation
 
                 this->vector_array = vectors2;
                 this->which_vectors_array = !this->which_vectors_array;
+            }).wait();
+
+            this->q.submit([&](sycl::handler& h) 
+            {
+                sycl::accessor<float, 1, sycl::access_mode::read> device_accessor_density(*this->macro_density_buffer, h);
+
+                h.copy(device_accessor_density, density_array_2);
+
+                this->density_array.store(density_array_2);
             }).wait();
         }
 

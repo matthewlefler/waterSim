@@ -1,4 +1,4 @@
-/*
+/**
     name: sockets.h
     author: matt l
         slack: @skye 
@@ -29,6 +29,7 @@
     the "server" spawns connections that handle each connection in an async context
         
 */
+
 #include <string>
 #include <iostream>
 #include <algorithm>
@@ -43,18 +44,27 @@
 
 #include "sycl/sycl.hpp"
 
-#define DATATYPE sycl::float4 // size of 16 bytes (4 floats x,y,z,w consisting of 4 bytes each in a row)
-
 const int send_buffer_length = 1024*10;
 
+
+void print(sycl::float4 val) 
+{
+    std::cout << "(" << val.x() << ", " << val.y() << ", " << val.z() << ", " << val.w() << ")\n";
+}
+void print(float val) 
+{
+    std::cout << val << "\n";
+}
+
+template<typename T>
 class EchoConnection: public Poco::Net::TCPServerConnection 
 {
     private:
-        std::atomic<DATATYPE *> * arr; // a pointer to the array; 
-        int arr_len; // the length of the array
+        std::atomic<T *> * arr; // a pointer to the array; 
+        int number_of_bytes_to_send; // the length of the array in bytes
 
-        int size_of_arr_len;
-        static constexpr int size_of_data_type = sizeof(DATATYPE);
+        int size_of_data_type = sizeof(T);
+        int size_of_number_of_bytes_to_send; // amount of bytes required to model the data in the arr 
 
         int width;
         int height;
@@ -63,14 +73,16 @@ class EchoConnection: public Poco::Net::TCPServerConnection
         char iter = 'a';
 
     public:
-        EchoConnection(const Poco::Net::StreamSocket& s, std::atomic<DATATYPE *> * pointer_to_arr, int width, int height, int depth): TCPServerConnection(s) 
+        EchoConnection(const Poco::Net::StreamSocket& s, std::atomic<T *> * pointer_to_arr, int width, int height, int depth): TCPServerConnection(s) 
         {
             this->arr = pointer_to_arr;
-            this->arr_len = width * height * depth;
+
             this->width = width;
             this->height = height;
             this->depth = depth;
-            this->size_of_arr_len = sizeof(arr_len);
+
+            this->number_of_bytes_to_send = width * height * depth * size_of_data_type;
+            this->size_of_number_of_bytes_to_send = sizeof(this->number_of_bytes_to_send);
          }
 
     void run() 
@@ -87,8 +99,6 @@ class EchoConnection: public Poco::Net::TCPServerConnection
 
                 char send_buffer[send_buffer_length]; // size is arbitrary rn as idk what the max is and what it should be 
 
-                int number_of_bytes_to_send = size_of_data_type * arr_len; // amount of bytes required to model the data in the arr
-
                 int bytes_sent = 0;
 
                 switch (int(buffer[0]))
@@ -97,9 +107,9 @@ class EchoConnection: public Poco::Net::TCPServerConnection
                     send_buffer[0] = 0;
                     send_buffer[1] = ++iter;
 
-                    send_buffer[2] = size_of_arr_len;
+                    send_buffer[2] = size_of_number_of_bytes_to_send;
 
-                    std::memcpy(&send_buffer[3], &arr_len, size_of_arr_len);
+                    std::memcpy(&send_buffer[3], &number_of_bytes_to_send, size_of_number_of_bytes_to_send);
 
                     ss.sendBytes(&send_buffer, 1024); // has to match the receiveing buffer for the header msg in the receiver 
                                                       // as it is possible that if different the socket will read into the data
@@ -107,9 +117,9 @@ class EchoConnection: public Poco::Net::TCPServerConnection
 
                     if(send_buffer_length > number_of_bytes_to_send) // if the data an be sent in one send call, do so
                     {    
-                        std::memcpy(&send_buffer[0], &(arr->load()[0]), number_of_bytes_to_send);
+                        std::memcpy(send_buffer, arr->load(), number_of_bytes_to_send);
 
-                        bytes_sent += ss.sendBytes(&send_buffer, size_of_data_type * arr_len);
+                        bytes_sent += ss.sendBytes(&send_buffer, number_of_bytes_to_send);
                     }
                     else //split the data up into different send calls 
                     {
@@ -173,16 +183,17 @@ class EchoConnection: public Poco::Net::TCPServerConnection
     }
 };
 
+template<typename T>
 class TCPServerConnectionFactoryTheSecond: public Poco::Net::TCPServerConnectionFactory
 {
     private:
-        std::atomic<DATATYPE *> * arr;
+        std::atomic<T *> * arr;
         int width;
         int height;
         int depth;
 
     public:
-        TCPServerConnectionFactoryTheSecond(std::atomic<DATATYPE *> & arr, int width, int height, int depth)
+        TCPServerConnectionFactoryTheSecond(std::atomic<T *> & arr, int width, int height, int depth)
         {
             this->arr = &arr;
             this->width = width;
@@ -192,10 +203,12 @@ class TCPServerConnectionFactoryTheSecond: public Poco::Net::TCPServerConnection
 
         Poco::Net::TCPServerConnection* createConnection(const Poco::Net::StreamSocket& socket)
         {
-            return new EchoConnection(socket, arr, width, height, depth);
+            std::cout << "\nnew connection from: " << socket.address().toString() << "\n";
+            return new EchoConnection<T>(socket, arr, width, height, depth);
         }
 }; 
 
+template<typename T>
 class Messenger
 {
     private:
@@ -203,9 +216,9 @@ class Messenger
 
     public:
 
-    Messenger(Poco::UInt16 port, std::atomic<DATATYPE*> & arr, int width, int height, int depth)
+    Messenger(Poco::UInt16 port, std::atomic<T*> & arr, int width, int height, int depth)
     {
-        server = new Poco::Net::TCPServer(new TCPServerConnectionFactoryTheSecond(arr, width, height, depth), port);
+        server = new Poco::Net::TCPServer(new TCPServerConnectionFactoryTheSecond<T>(arr, width, height, depth), port);
         server->start();
 
         std::cout << "starting server at address: " << server->socket().address().toString() << " | with a send_buffer size of: " << send_buffer_length << " bytes " << "\n";
@@ -218,9 +231,5 @@ class Messenger
         this->server->stop(); // stop the server 
         free(server); // and free the memory
     }
-
-    void UpdateData()
-    {
-        //TODO: update the data somehow
-    }
 };
+
