@@ -37,6 +37,9 @@ public class Game1 : Game
     Texture2D tex;
     BitmapFont font;
 
+    BasicEffect basicEffect;
+
+
     SimpleCamera camera;
 
     private ILevel current_level;
@@ -55,7 +58,6 @@ public class Game1 : Game
 
     protected override void Initialize()
     {
-
         _graphics.PreferredBackBufferHeight = 1300;
         _graphics.PreferredBackBufferWidth = 1300;
         _graphics.ApplyChanges();
@@ -67,6 +69,13 @@ public class Game1 : Game
         screen_middle = new Point(screen_x / 2, screen_y / 2);
 
         Console.WriteLine("screen width: " + screen_x + " screen height: " + screen_y);
+
+        basicEffect = new BasicEffect(GraphicsDevice); //basic effect
+        
+        basicEffect.VertexColorEnabled = true;
+        basicEffect.AmbientLightColor = new Vector3(0.5f,0.5f,0.5f);
+        basicEffect.EmissiveColor = new Vector3(0.5f, 0.5f, 0.5f);
+
 
         // TODO: Add your initialization logic here
         current_level = new LevelSelector(screen_x, screen_y, this);
@@ -176,10 +185,6 @@ public class Game1 : Game
 
         _spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.AlphaBlend);
 
-        BasicEffect basicEffect = new BasicEffect(GraphicsDevice); //basic effect
-        basicEffect.VertexColorEnabled = true;
-        basicEffect.AmbientLightColor = new Vector3(0.5f,0.5f,0.5f);
-        basicEffect.EmissiveColor = new Vector3(0.5f, 0.5f, 0.5f);
 
         basicEffect.World = Matrix.Identity;
 

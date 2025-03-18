@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
@@ -35,8 +36,8 @@ public class VoxelObject : Object
     public VertexPositionColor[] vertices;
     private short[] indices;
 
-    private VertexBuffer vertex_buffer;
-    private IndexBuffer index_buffer;
+    private VertexBuffer[] vertex_buffers;
+    private IndexBuffer[] index_buffers;
 
     /// <summary>
     /// Creates and returns a voxel object
@@ -116,8 +117,24 @@ public class VoxelObject : Object
          *   6      7
         */
 
+        this.vertex_buffers = new VertexBuffer[(voxel_cube_offsets.Length * 8 / 65536) + 1];
+        this.index_buffers = new IndexBuffer[(voxel_cube_offsets.Length * 8 / 65536) + 1];
+        
+        int l = 0;
         for(int i = 0, j = 0, k = 0; i < this.voxel_cube_offsets.Length; i++, j+=8, k+=36)
         {
+            if(j > 65536) 
+            {
+                this.vertex_buffers[l] = new VertexBuffer(this.graphics_device, VertexPositionColor.VertexDeclaration, this.vertices.Length, BufferUsage.WriteOnly);
+                this.vertex_buffers[l].SetData<VertexPositionColor>(this.vertices);
+
+                this.index_buffers[l] = new IndexBuffer(this.graphics_device, typeof(short), indices.Length, BufferUsage.WriteOnly);
+                this.index_buffers[l].SetData<short>(indices);
+
+                ++l;
+                j = 0;
+            }
+
             Vector3 voxel_offset = voxel_cube_offsets[i];
             Color voxel_color = voxel_colors[i];
 
@@ -142,25 +159,29 @@ public class VoxelObject : Object
             indices[k + 27] = (short) (j + 4); indices[k + 28] = (short) (j + 2); indices[k + 29] = (short) (j + 6); // tri 10
             indices[k + 30] = (short) (j + 7); indices[k + 31] = (short) (j + 4); indices[k + 32] = (short) (j + 6); // tri 11 bottom
             indices[k + 33] = (short) (j + 7); indices[k + 34] = (short) (j + 5); indices[k + 35] = (short) (j + 4); // tri 12
+
         }
 
-        this.vertex_buffer = new VertexBuffer(this.graphics_device, VertexPositionColor.VertexDeclaration, this.vertices.Length, BufferUsage.WriteOnly);
-        this.vertex_buffer.SetData<VertexPositionColor>(this.vertices);
+        this.vertex_buffers[l] = new VertexBuffer(this.graphics_device, VertexPositionColor.VertexDeclaration, this.vertices.Length, BufferUsage.WriteOnly);
+        this.vertex_buffers[l].SetData<VertexPositionColor>(this.vertices);
 
-        this.index_buffer = new IndexBuffer(this.graphics_device, typeof(short), indices.Length, BufferUsage.WriteOnly);
-        this.index_buffer.SetData<short>(indices);
+        this.index_buffers[l] = new IndexBuffer(this.graphics_device, typeof(short), indices.Length, BufferUsage.WriteOnly);
+        this.index_buffers[l].SetData<short>(indices);
     }
 
     public override void Draw(BasicEffect effect)
     {
-        graphics_device.SetVertexBuffer(this.vertex_buffer);
-        graphics_device.Indices = index_buffer;
-
-        foreach (EffectPass pass in effect.CurrentTechnique.Passes)
+        for (int i = 0; i < vertex_buffers.Length; i++)
         {
-            pass.Apply();
-            
-            this.graphics_device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, this.indices.Length / 3);
+            graphics_device.SetVertexBuffer(this.vertex_buffers[i]);
+            graphics_device.Indices = index_buffers[i];
+
+            foreach (EffectPass pass in effect.CurrentTechnique.Passes)
+            {
+                pass.Apply();
+
+                this.graphics_device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, this.index_buffers[i].IndexCount / 3);
+            }
         }
     }
 }

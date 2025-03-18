@@ -190,7 +190,6 @@ class Simulation
 
         // reference length in meters, 
         // is also the distance between two nodes
-        // and the width, height, depth of a node
         float ref_len = 1.0f; 
 
         // reference length in seconds 
@@ -204,8 +203,8 @@ class Simulation
         
         // this changes the time it takes for the fluid to relax back to the equlibrium state
         // is related semi-directly to the fluid's viscosity 
-        // a value above 0 and at most 1
-        float tau = 3f;
+        // a value above 0 and less than approx 2.5, higher values become unstable
+        float tau = 1.5f;
 
         ///////////////////////////////////////////////
         // macroscopic variables                     //

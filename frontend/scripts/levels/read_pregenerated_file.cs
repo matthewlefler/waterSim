@@ -6,8 +6,8 @@ using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework;
 using Objects;
 using System.IO;
-using MonoGame.Extended.Content.Tiled;
-using System;
+using MonoGame.Extended.BitmapFonts;
+using MonoGame.Extended.Screens;
 
 namespace Levels;
 public class ReadFileLevel : ILevel
@@ -28,6 +28,8 @@ public class ReadFileLevel : ILevel
 
     private Simulation sim;
 
+    BitmapFont font;
+
     public ReadFileLevel(string filepath, GraphicsDevice graphics_device) 
     {
         this.filepath = filepath;
@@ -44,6 +46,8 @@ public class ReadFileLevel : ILevel
         effect.View = camera.view_matrix;
 
         sim.Draw(effect);
+
+        sprite_batch.DrawString(font, current_frame.ToString(), new Vector2(0, 130), Color.White, 0, Vector2.Zero, 0.3f, SpriteEffects.None, 0f);
     }
 
     public string getName()
@@ -97,7 +101,7 @@ public class ReadFileLevel : ILevel
 
     public void load_content(ContentManager content, GraphicsDevice graphics_device)
     {
-        // nothing to do
+        this.font = MonoGame.Extended.BitmapFonts.BitmapFont.FromFile(graphics_device, "Content/sans-serif.fnt");
     }
 
     public void update(float dt, KeyboardState keyboard_state, KeyboardState last_keyboard_state, Camera camera)

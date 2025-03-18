@@ -49,7 +49,7 @@ int main()
 
     // set up memory
     // initilize the simulation
-    Simulation sim(10, 10, 10);
+    Simulation sim(30, 30, 30);
 
     sycl::range<3> temp_dims = sim.get_dimensions();
 
@@ -73,7 +73,7 @@ int main()
 
         write_to_file(file, sim);
 
-        if(count > 1000) { exit.store(true); }
+        if(count > 50) { exit.store(true); }
 
         if(exit.load())
         {
