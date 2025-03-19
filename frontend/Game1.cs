@@ -160,11 +160,11 @@ public class Game1 : Game
 
         if(keyboard.IsKeyDown(Keys.LeftShift))
         {
-            camera.speed = 3f;
+            camera.speed = 6f;
         }
         else
         {
-            camera.speed = 1f;
+            camera.speed = 2f;
         }
 
         camera.Rotate((screen_middle.X - mouse.X) * dt * 0.2f, (screen_middle.Y - mouse.Y) * dt * 0.2f);
@@ -190,6 +190,7 @@ public class Game1 : Game
 
         current_level.draw(basicEffect, GraphicsDevice, _spriteBatch, camera);
 
+        basicEffect.World = Matrix.Identity;
         foreach (EffectPass pass in basicEffect.CurrentTechnique.Passes)
         {
             pass.Apply();

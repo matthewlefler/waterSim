@@ -15,7 +15,7 @@ public class Arrow : Object
 
     private Matrix world_matix;
 
-    private VertexPositionColor[] vertices = new VertexPositionColor[6];
+    private VertexPositionColor[] vertices = new VertexPositionColor[5];
 
     public Arrow(Vector3 position, Vector3 direction, Color color, GraphicsDevice graphics_device) 
     : base(position, 
@@ -87,10 +87,9 @@ public class Arrow : Object
 
         vertices[0] = new VertexPositionColor(Vector3.Zero, this.color);
         vertices[1] = new VertexPositionColor(point, this.color);
-        vertices[2] = new VertexPositionColor(point, this.color);
-        vertices[3] = new VertexPositionColor(point * 0.9f - offset, this.color);
-        vertices[4] = new VertexPositionColor(point, this.color);
-        vertices[5] = new VertexPositionColor(point * 0.9f + offset, this.color);
+        vertices[2] = new VertexPositionColor(point * 0.9f - offset, this.color);
+        vertices[3] = new VertexPositionColor(point, this.color);
+        vertices[4] = new VertexPositionColor(point * 0.9f + offset, this.color);
 
         this.vertex_buffer.SetData<VertexPositionColor>(this.vertices);
     }
@@ -103,7 +102,7 @@ public class Arrow : Object
         foreach(EffectPass pass in effect.CurrentTechnique.Passes) 
         {
             pass.Apply();
-            graphics_device.DrawPrimitives(PrimitiveType.LineList, 0, 3);
+            graphics_device.DrawPrimitives(PrimitiveType.LineStrip, 0, 4);
         }
     }
 }
@@ -114,13 +113,12 @@ public class ArrowCollection : Object
     private int height;
     private int depth;
 
-    Arrow[] arrows;
+    private Arrow[] arrows;
 
 
-    Color start = Color.Red;
-    Color end = Color.BlueViolet;
+    private static Color start = Color.Blue;
+    private static Color end = Color.Red;
 
-    int range = 10;
 
     public ArrowCollection(int width, int height, int depth, GraphicsDevice graphics_device) : base(Vector3.Zero, Quaternion.Identity, graphics_device)
     {
@@ -139,14 +137,33 @@ public class ArrowCollection : Object
 
     public void setData(Vector3[] directions) 
     {
+        float max_magnitude = 0.0f;
+        foreach(Vector3 dir in directions) 
+        {
+            float len_squared = dir.LengthSquared();
+            if(len_squared > max_magnitude)
+            {
+                max_magnitude = len_squared;
+            }
+        }
+        max_magnitude = MathF.Sqrt(max_magnitude);
+
         for (int i = 0; i < directions.Length; i++)
         {
             float magnitude = directions[i].Length();
-            Vector3 direction = Vector3.Normalize(directions[i]) * 0.8f;
+            Vector3 direction;
+            if(magnitude > 0.8f)
+            {
+                direction = Vector3.Normalize(directions[i]) * 0.8f;
+            }
+            else 
+            {
+                direction = directions[i];
+            }
 
-            Color color = Color.Lerp(start, end, MathF.Min(magnitude / range, 1.0f));
+            Color color = Color.Lerp(start, end, MathF.Min(magnitude / max_magnitude, 1.0f));
 
-            if(magnitude <= 0) { color = Color.Bisque; direction = Vector3.Right * 0.2f; }
+            if(magnitude <= 0.001) { color = Color.Black; direction = Vector3.Zero; }
             
             arrows[i].setDirection(direction, color);
         }

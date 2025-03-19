@@ -94,6 +94,7 @@ public class ReadFileLevel : ILevel
 
         // and setup init frame of the simulation
         this.current_frame = 0;
+        this.number_of_frames = density_frames.Count;
 
         this.sim.SetDensity(density_frames[current_frame], simulation_width, simulation_height, simulation_depth);
         this.sim.SetVelocity(velocity_frames[current_frame], simulation_width, simulation_height, simulation_depth);

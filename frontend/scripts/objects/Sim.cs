@@ -11,8 +11,8 @@ public class Simulation : Object
     public Vector3[] velocities; 
     public float[] densities; 
 
-    private static Color density_color_start = Color.Blue;
-    private static Color density_color_end = Color.Purple;
+    private static Color density_color_start = Color.Black;
+    private static Color density_color_end = Color.WhiteSmoke;
 
     public VoxelObject voxelObject;
     public ArrowCollection flowArrows;
@@ -41,7 +41,7 @@ public class Simulation : Object
             positions[i] = this.Get3DPositionVector(i);
         }
 
-        this.voxelObject = new VoxelObject(Vector3.Zero, Quaternion.Identity, positions, colors, 0.1f, graphics_device);
+        this.voxelObject = new VoxelObject(Vector3.Zero, Quaternion.Identity, positions, colors, 0.05f, graphics_device);
 
         this.flowArrows = new ArrowCollection(width, height, depth, graphics_device);
         this.flowArrows.setData(velocities);
@@ -101,7 +101,19 @@ public class Simulation : Object
                 return t > 1 ? 1 : 1 - MathF.Pow(2, -10*t);
             }
 
-            colors[i] = Color.Lerp(density_color_start, density_color_end, expLerp(t));
+            t = expLerp(t);
+
+            Color color;
+            if(t < 0.001f)
+            {
+                color = new Color(0.0f, 0.0f, 0.0f, 0.0f);
+            }
+            else
+            {
+                color = Color.Lerp(density_color_start, density_color_end, t);
+            }
+
+            colors[i] = color;
             positions[i] = this.Get3DPositionVector(i);
         }
 
@@ -114,7 +126,7 @@ public class Simulation : Object
         if(voxelObject is null) { return; }
 
         this.voxelObject.Draw(effect);
-        // this.flowArrows.Draw(effect);
+        this.flowArrows.Draw(effect);
     }
 
     public (int x, int y, int z) Get3DPosition(int index)
