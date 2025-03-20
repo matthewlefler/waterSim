@@ -1,5 +1,8 @@
 *.cache
 *.dll
 *.env
+*.json
+*.pdb
+Debug/*
 build/**
 test.txt
