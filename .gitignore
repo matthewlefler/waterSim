@@ -1,5 +1,5 @@
 *.cache
 *.dll
 *.env
-backend/build/*
+build/**
 test.txt
