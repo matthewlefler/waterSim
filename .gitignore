@@ -2,3 +2,4 @@
 *.dll
 *.env
 backend/build/*
+test.txt
