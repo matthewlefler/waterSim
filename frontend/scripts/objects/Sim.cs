@@ -7,61 +7,138 @@ namespace Objects;
 public class Simulation : Object
 {
     // x, y, z  y+ is up
-    // flattened 3d array
-    public Vector3[] velocities; 
+    // 27 arrays of flattened 3d arrays
+    public Vector3[][] micro_velocities;
+    public Vector3[] macro_velocities;
+
     public float[] densities; 
 
     private static Color density_color_start = Color.Black;
     private static Color density_color_end = Color.WhiteSmoke;
 
-    public VoxelObject voxelObject;
-    public ArrowCollection flowArrows;
+    public VoxelObject voxel_object;
+    public ArrowCollection[] micro_flow_arrows;
+    public ArrowCollection macro_flow_arrows;
+
+    public bool draw_macro_arrows = true;
 
     public int width;
     public int height;
     public int depth;
 
-    public Simulation(GraphicsDevice graphics_device) : this(new Vector3[] { Vector3.Zero }, new float[] { 0.0f }, 1, 1, 1, graphics_device) { }
+    public static readonly Vector3[] possible_velocities = {    
+        new Vector3( 0,  0,  0), 
+        new Vector3( 1,  0,  0), 
+        new Vector3( 0,  1,  0), 
+        new Vector3( 0,  0,  1), 
+        new Vector3(-1,  0,  0), 
+        new Vector3( 0, -1,  0), 
+        new Vector3( 0,  0, -1), 
+        new Vector3( 1,  1,  0), 
+        new Vector3(-1,  1,  0), 
+        new Vector3( 1, -1,  0), 
+        new Vector3(-1, -1,  0), 
+        new Vector3( 0,  1,  1), 
+        new Vector3( 0, -1,  1), 
+        new Vector3( 0,  1, -1), 
+        new Vector3( 0, -1, -1), 
+        new Vector3( 1,  0,  1), 
+        new Vector3(-1,  0,  1), 
+        new Vector3( 1,  0, -1), 
+        new Vector3(-1,  0, -1), 
+        new Vector3( 1,  1,  1), 
+        new Vector3( 1,  1, -1), 
+        new Vector3( 1, -1,  1), 
+        new Vector3( 1, -1, -1), 
+        new Vector3(-1,  1,  1), 
+        new Vector3(-1,  1, -1), 
+        new Vector3(-1, -1,  1), 
+        new Vector3(-1, -1, -1)
+    };
 
-    public Simulation(Vector3[] velocities, float[] densities, int width, int height, int depth, GraphicsDevice graphics_device) : base(Vector3.One, Quaternion.Identity, graphics_device)
+    public Simulation(GraphicsDevice graphics_device) : this(
+        [[Vector3.Zero],[Vector3.Zero],[Vector3.Zero], // 27 one for each of the possible velocities 
+         [Vector3.Zero],[Vector3.Zero],[Vector3.Zero],
+         [Vector3.Zero],[Vector3.Zero],[Vector3.Zero],
+
+         [Vector3.Zero],[Vector3.Zero],[Vector3.Zero],
+         [Vector3.Zero],[Vector3.Zero],[Vector3.Zero],
+         [Vector3.Zero],[Vector3.Zero],[Vector3.Zero],
+         
+         [Vector3.Zero],[Vector3.Zero],[Vector3.Zero],
+         [Vector3.Zero],[Vector3.Zero],[Vector3.Zero],
+         [Vector3.Zero],[Vector3.Zero],[Vector3.Zero],],
+         
+        new float[] { 0.0f }, 1, 1, 1, graphics_device) { }
+
+    public Simulation(Vector3[][] velocities, float[] densities, int width, int height, int depth, GraphicsDevice graphics_device) : base(Vector3.One, Quaternion.Identity, graphics_device)
     {
-        this.velocities = velocities;
+        this.micro_velocities = velocities;
         this.densities = densities;
 
         this.width = width;
         this.height = height;
         this.depth = depth;
 
-        Color[] colors = new Color[this.velocities.Length];
-        Vector3[] positions = new Vector3[this.velocities.Length];
+        Color[] colors = new Color[this.micro_velocities.Length];
+        Vector3[] positions = new Vector3[this.micro_velocities.Length];
 
-        for (int i = 0; i < this.velocities.Length; i++)
+        for (int i = 0; i < this.densities.Length; i++)
         {
             colors[i] = Color.Lerp(density_color_start, density_color_end, densities[i] / 10f);
             positions[i] = this.Get3DPositionVector(i);
         }
 
-        this.voxelObject = new VoxelObject(Vector3.Zero, Quaternion.Identity, positions, colors, 0.05f, graphics_device);
+        this.voxel_object = new VoxelObject(Vector3.Zero, Quaternion.Identity, positions, colors, 0.05f, graphics_device);
 
-        this.flowArrows = new ArrowCollection(width, height, depth, graphics_device);
-        this.flowArrows.setData(velocities);
+        if(velocities.Length != 27) 
+        {
+            throw new ArgumentException("new_velocities number of sub arrays is not 27");
+        }
 
-        this.graphics_device = graphics_device;
+        this.micro_flow_arrows = new ArrowCollection[27];
+        for (int i = 0; i < micro_flow_arrows.Length; i++)
+        {
+            this.micro_flow_arrows[i] = new ArrowCollection(width, height, depth, graphics_device);
+            this.micro_flow_arrows[i].setData(velocities[i]);
+        }
+
+        this.macro_flow_arrows = new ArrowCollection(width, height, depth, graphics_device);
+
+        calc_macro_velocity();  
     }
 
-    public void SetVelocity(Vector3[] new_velocities, int width, int height, int depth)
+    public void SetVelocity(Vector3[][] new_velocities, int width, int height, int depth)
     {
-        this.velocities = new_velocities;
+        if(new_velocities.Length != 27) 
+        {
+            throw new ArgumentException("new_velocities number of sub arrays is not 27");
+        }
+
+        this.micro_velocities = new_velocities;
 
         this.width = width;
         this.height = height;
         this.depth = depth;
         
-        this.flowArrows = new ArrowCollection(width, height, depth, graphics_device);
-        this.flowArrows.setData(new_velocities);        
+        if(draw_macro_arrows)
+        {
+            calc_macro_velocity(); 
+
+            this.macro_flow_arrows = new ArrowCollection(width, height, depth, graphics_device);
+            this.macro_flow_arrows.setData(macro_velocities);      
+        }
+        else
+        {
+            for (int i = 0; i < micro_flow_arrows.Length; i++)
+            {
+                this.micro_flow_arrows[i] = new ArrowCollection(width, height, depth, graphics_device);
+                this.micro_flow_arrows[i].setData(micro_velocities[i]);
+            }
+        }
     } 
 
-    public void SetDensity(float[] new_densities, int width, int height, int depth) 
+    public void SetDensity(float[] new_densities, int[] changeablility, int width, int height, int depth) 
     {
         this.densities = new_densities; 
 
@@ -94,39 +171,83 @@ public class Simulation : Object
 
         for (int i = 0; i < new_densities.Length; i++)
         {
-            float t = (new_densities[i] - minimum_density) / maximum_density;
-
-            static float expLerp(float t)
-            {
-                return t > 1 ? 1 : 1 - MathF.Pow(2, -10*t);
-            }
-
-            t = expLerp(t);
-
             Color color;
-            if(t < 0.001f)
+
+            switch(changeablility[i]) 
             {
-                color = new Color(0.0f, 0.0f, 0.0f, 0.0f);
-            }
-            else
-            {
-                color = Color.Lerp(density_color_start, density_color_end, t);
+                case 0:
+                    float t = (new_densities[i] - minimum_density) / maximum_density;
+
+                    static float expLerp(float t)
+                    {
+                        return t > 1 ? 1 : 1 - MathF.Pow(2, -10*t);
+                    }
+
+                    t = expLerp(t);
+
+                    if(t < 0.001f)
+                    {
+                        color = new Color(0.0f, 0.0f, 0.0f, 0.0f);
+                    }
+                    else
+                    {
+                        color = Color.Lerp(density_color_start, density_color_end, t);
+                    }
+                break;
+
+                case 1:
+                    color = Color.Purple;
+                break;
+
+                case 2:
+                    color = Color.Green;
+                break;
+
+                default:
+                    color = new Color(0, 0, 0, 0);
+                break;
             }
 
             colors[i] = color;
             positions[i] = this.Get3DPositionVector(i);
         }
 
-        this.voxelObject.SetData(positions, colors);
+        this.voxel_object.SetData(positions, colors);
+    }
+
+    private void calc_macro_velocity()
+    {
+        int node_count = this.width * this.height * this.depth;
+        macro_velocities = new Vector3[node_count];
+        for (int j = 0; j < node_count; j++)
+        {
+            Vector3 average = Vector3.Zero;
+            for (int i = 0; i < 27; i++)
+            {
+                average += this.micro_velocities[i][j];
+            }
+            macro_velocities[j] = average;
+        }
     }
 
 
     override public void Draw(BasicEffect effect)
     {
-        if(voxelObject is null) { return; }
+        if(voxel_object is null) { return; }
 
-        this.voxelObject.Draw(effect);
-        this.flowArrows.Draw(effect);
+        // this.voxel_object.Draw(effect);
+
+        if(draw_macro_arrows)
+        {
+            macro_flow_arrows.Draw(effect);
+        }
+        else
+        {
+            foreach(ArrowCollection collection in this.micro_flow_arrows)
+            {
+                collection.Draw(effect);
+            }
+        }
     }
 
     public (int x, int y, int z) Get3DPosition(int index)
@@ -184,13 +305,13 @@ public class Simulation : Object
         //trilinear interpolation
         Vector3 value = (
         (
-        (velocities[GetIndex(minX, minY, minZ)] * (yDec) + velocities[GetIndex(minX, maxY, minZ)] * (1-yDec)) * (xDec) +
-        (velocities[GetIndex(maxX, minY, minZ)] * (yDec) + velocities[GetIndex(maxX, maxY, minZ)] * (1-yDec)) * (1-xDec)
+        (macro_velocities[GetIndex(minX, minY, minZ)] * (yDec) + macro_velocities[GetIndex(minX, maxY, minZ)] * (1-yDec)) * (xDec) +
+        (macro_velocities[GetIndex(maxX, minY, minZ)] * (yDec) + macro_velocities[GetIndex(maxX, maxY, minZ)] * (1-yDec)) * (1-xDec)
         ) 
         * (zDec) +
         (
-        (velocities[GetIndex(minX, minY, maxZ)] * (yDec) + velocities[GetIndex(minX, maxY, minZ)] * (1-yDec)) * (xDec) + 
-        (velocities[GetIndex(maxX, minY, maxZ)] * (yDec) + velocities[GetIndex(maxX, maxY, minZ)] * (1-yDec)) * (1-xDec)
+        (macro_velocities[GetIndex(minX, minY, maxZ)] * (yDec) + macro_velocities[GetIndex(minX, maxY, minZ)] * (1-yDec)) * (xDec) + 
+        (macro_velocities[GetIndex(maxX, minY, maxZ)] * (yDec) + macro_velocities[GetIndex(maxX, maxY, minZ)] * (1-yDec)) * (1-xDec)
         ) 
         * (1-zDec)
         );

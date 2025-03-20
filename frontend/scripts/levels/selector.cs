@@ -7,6 +7,7 @@ using Microsoft.Xna.Framework;
 
 using MonoGame.Extended.BitmapFonts;
 using Cameras;
+using System;
 
 namespace Levels;
 
@@ -48,14 +49,20 @@ public class LevelSelector : ILevel
         for (int i = 0; i < levels.Count; i++)
         {
             Color color = Color.White;
-            float size = 0.3f;
-            if(this.selected == i) { size = 0.35f; }
+            float size = 0.7f;
 
             string level_name = levels[i].getName();
 
+            if(this.selected == i) 
+            { 
+                level_name = "- " + level_name + " -";
+            }
+
+            float height = font.LineHeight * size;
+
             sprite_batch.DrawString(font, level_name, 
-                                    new Vector2(screen_width / 2 - (font.LetterSpacing * level_name.Length * 2f), i * 30 + ((screen_height / 2) - (levels.Count * 30))),
-                                    color, 0, Vector2.Zero, size, SpriteEffects.None, 0f);
+                                    new Vector2(screen_width / 2.0f - size * (font.MeasureString(level_name).Width / 2.0f), i * height + ((screen_height / 2) - (levels.Count * 30))),
+                                    color, 0, Vector2.Zero, size, SpriteEffects.None, 0.0f);
         }
     }
 
@@ -63,10 +70,6 @@ public class LevelSelector : ILevel
     public void init()
     {
         this.selected = 0;
-
-        foreach(ILevel level in levels) {
-            level.init();
-        }  
     }
 
     public void load_content(ContentManager content, GraphicsDevice graphics_device)
@@ -99,6 +102,7 @@ public class LevelSelector : ILevel
         }
         if(keyboard_state.IsKeyDown(Keys.Enter)) 
         {
+            levels[selected].init();
             instance.setLevel(levels[selected]);
         }
     }

@@ -23,12 +23,21 @@
 
 void write_to_file(std::ofstream & file, Simulation & sim) 
 {
+    auto density_accessor = sim.get_accessor_for_discrete_density_buffer_1();
+    auto changeable_accessor = sim.get_accessor_for_changeable_buffer();
     for(int i = 0; i < sim.get_node_count(); ++i) 
     {
+        file << (int) changeable_accessor[i] << " ";
+
         float density = sim.density_array.load()[i];
-        sycl::float4 vector = sim.vector_array.load()[i];
-        file << density << " ";
-        file << vector.x() << " " << vector.y() << " " << vector.z() << " ";
+        file << int(density * 100.0f) / 100.0f << " ";
+
+        for(uint8_t j = 0; j < 27; ++j)
+        {
+            float val = density_accessor[i * 27 + j];
+            val = int(val * 1000.0f) / 1000.0f;
+            file << val << " ";
+        }
     }
     file << "\n";
 }
@@ -49,7 +58,7 @@ int main()
 
     // set up memory
     // initilize the simulation
-    Simulation sim(20, 20, 40);
+    Simulation sim(130, 1, 150, 1.225f, 0.00001f, 343, 0.02f, 55.0f);
 
     sycl::range<3> temp_dims = sim.get_dimensions();
 
@@ -65,15 +74,13 @@ int main()
     while(true)
     {
         // TODO: add proper timing and fps counter for stats
-        std::cout << "\n/////////////\n";
         std::cout << "// frame " << count << " //\n";
-        std::cout << "/////////////\n" << std::endl;
 
         sim.next_frame(1.0f);
 
         write_to_file(file, sim);
 
-        if(count > 20) { exit.store(true); }
+        if(count > 500) { exit.store(true); }
 
         if(exit.load())
         {
@@ -86,7 +93,7 @@ int main()
 
     file.close();
 
-    std::cout << "\ndata written successfully\n";
+    std::cout << "\n---data written successfully---\n\n";
 
     return 0;
 }

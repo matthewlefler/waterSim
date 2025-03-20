@@ -37,7 +37,7 @@ public class Game1 : Game
     Texture2D tex;
     BitmapFont font;
 
-    BasicEffect basicEffect;
+    BasicEffect basic_effect;
 
 
     SimpleCamera camera;
@@ -70,11 +70,11 @@ public class Game1 : Game
 
         Console.WriteLine("screen width: " + screen_x + " screen height: " + screen_y);
 
-        basicEffect = new BasicEffect(GraphicsDevice); //basic effect
+        basic_effect = new BasicEffect(GraphicsDevice); //basic effect
         
-        basicEffect.VertexColorEnabled = true;
-        basicEffect.AmbientLightColor = new Vector3(0.5f,0.5f,0.5f);
-        basicEffect.EmissiveColor = new Vector3(0.5f, 0.5f, 0.5f);
+        basic_effect.VertexColorEnabled = true;
+        basic_effect.AmbientLightColor = new Vector3(0.5f,0.5f,0.5f);
+        basic_effect.EmissiveColor = new Vector3(0.5f, 0.5f, 0.5f);
 
 
         // TODO: Add your initialization logic here
@@ -84,15 +84,17 @@ public class Game1 : Game
 
         LevelSelector levelSelector = new LevelSelector(screen_x, screen_y, this);
 
-        levelSelector.addLevel(new ReadFileLevel("/home/lefler/Documents/gitRepos/waterSim/backend/build/test.txt", GraphicsDevice));
+        levelSelector.addLevel(new ReadFileLevel3D("/home/lefler/Documents/gitRepos/waterSim/backend/build/test.txt", GraphicsDevice));
 
+        levelSelector.addLevel(new ReadFileLevel2D("/home/lefler/Documents/gitRepos/waterSim/backend/build/test.txt", GraphicsDevice, screen_x, screen_y));
+        
         levelSelector.addLevel(new NetworkedSimulation(GraphicsDevice));
+        
 
         current_level = levelSelector;        
 
         current_level.init();
-
-
+        
         base.Initialize();
 
         Console.WriteLine("Initialization done");
@@ -131,48 +133,42 @@ public class Game1 : Game
         if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || keyboard.IsKeyDown(Keys.Escape))
         { Exit(); }
 
-        if(keyboard.IsKeyDown(Keys.W))
+        if(keyboard.IsKeyDown(Keys.W)) // forward
         {
             camera.Move(Vector3.Forward * dt);
         }
-        if(keyboard.IsKeyDown(Keys.S))
+        if(keyboard.IsKeyDown(Keys.S)) // backward
         {
             camera.Move(Vector3.Backward * dt);
         }
 
-        if(keyboard.IsKeyDown(Keys.A))
+        if(keyboard.IsKeyDown(Keys.A)) // left
         {
             camera.Move(Vector3.Left * dt);
         }
-        if(keyboard.IsKeyDown(Keys.D))
+        if(keyboard.IsKeyDown(Keys.D)) // right
         {
             camera.Move(Vector3.Right * dt);
         }
 
-        if(keyboard.IsKeyDown(Keys.Q))
+        if(keyboard.IsKeyDown(Keys.Q)) // down
         {
             camera.Move(Vector3.Down * dt);
         }
-        if(keyboard.IsKeyDown(Keys.E))
+        if(keyboard.IsKeyDown(Keys.E)) // up
         {
             camera.Move(Vector3.Up * dt);
         }
 
-        if(keyboard.IsKeyDown(Keys.LeftShift))
-        {
-            camera.speed = 6f;
-        }
-        else
-        {
-            camera.speed = 2f;
-        }
+        if(keyboard.IsKeyDown(Keys.LeftShift))        { camera.speed = 6f; } // sprint
+        else if(keyboard.IsKeyDown(Keys.LeftControl)) { camera.speed = 1f; } // crouch
+        else                                          { camera.speed = 3f; } // normal
 
-        camera.Rotate((screen_middle.X - mouse.X) * dt * 0.2f, (screen_middle.Y - mouse.Y) * dt * 0.2f);
+        // rotate based on mouse movement
+        camera.Rotate((screen_middle.X - mouse.X) * dt * 0.2f, (screen_middle.Y - mouse.Y) * dt * 0.2f); 
 
         current_level.update(dt, keyboard, last_keyboard, camera);
-
-        // TODO: Add your update logic here
-
+        
         base.Update(gameTime);
     }
 
@@ -185,13 +181,14 @@ public class Game1 : Game
 
         _spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.AlphaBlend);
 
+        basic_effect.World = Matrix.Identity;
+        basic_effect.Projection = camera.projection_matrix;
+        basic_effect.View = camera.view_matrix;
 
-        basicEffect.World = Matrix.Identity;
+        current_level.draw(basic_effect, GraphicsDevice, _spriteBatch, camera);
 
-        current_level.draw(basicEffect, GraphicsDevice, _spriteBatch, camera);
-
-        basicEffect.World = Matrix.Identity;
-        foreach (EffectPass pass in basicEffect.CurrentTechnique.Passes)
+        basic_effect.World = Matrix.Identity;
+        foreach (EffectPass pass in basic_effect.CurrentTechnique.Passes)
         {
             pass.Apply();
 

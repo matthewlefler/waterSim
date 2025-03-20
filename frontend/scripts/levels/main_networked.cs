@@ -30,7 +30,7 @@ public class NetworkedSimulation : ILevel
     {
         sim.Draw(effect);
 
-        sprite_batch.DrawString(font, sim.velocities[0].ToString(), new Vector2(1, 30), Color.WhiteSmoke, 0, Vector2.Zero, 0.3f, SpriteEffects.None, 0f);
+        sprite_batch.DrawString(font, sim.micro_velocities[0].ToString(), new Vector2(1, 30), Color.WhiteSmoke, 0, Vector2.Zero, 0.3f, SpriteEffects.None, 0f);
 
         sprite_batch.DrawString(font, "sim dims: (" + sim.width + ", " + sim.height + ", " + sim.depth + ")", new Vector2(1, 60), Color.WhiteSmoke, 0, Vector2.Zero, 0.3f, SpriteEffects.None, 0f);
     }
@@ -57,7 +57,7 @@ public class NetworkedSimulation : ILevel
             return temp;
         },
         (arr, width, height, depth) => {
-            sim.SetVelocity(arr, width, height, depth);
+            // sim.SetVelocity(arr, width, height, depth);
         });
         velocity_messenger.connect();
 
@@ -72,7 +72,7 @@ public class NetworkedSimulation : ILevel
                 return temp;
         },
         (arr, width, height, depth) => {
-            sim.SetDensity(arr, width, height, depth);
+            // sim.SetDensity(arr, width, height, depth);
         });
         density_messenger.connect();
 

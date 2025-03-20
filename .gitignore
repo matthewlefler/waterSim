@@ -1,3 +1,4 @@
 *.cache
 *.dll
-test.txt
+*.env
+backend/build/*

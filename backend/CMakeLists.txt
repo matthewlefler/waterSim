@@ -7,8 +7,8 @@ project(waterSim CXX)
 
 set(CMAKE_BUILD_TYPE "debug")
 
-set(COMPILE_FLAGS "-fsycl -g")
-set(LINK_FLAGS "-fsycl -g")
+set(COMPILE_FLAGS "-fsycl -g -fsycl-targets=amdgcn-amd-amdhsa -Xsycl-target-backend --offload-arch=gfx1102")
+set(LINK_FLAGS "-fsycl -g -fsycl-targets=amdgcn-amd-amdhsa -Xsycl-target-backend --offload-arch=gfx1102")
 
 add_executable(main src/save_to_file.cpp)
 

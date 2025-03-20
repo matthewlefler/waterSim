@@ -17,7 +17,7 @@
 
 // will turn on/off related functions that print out degub information
 // such as the read_out_values function
-const bool DEBUG = true;
+const bool DEBUG = false;
 
 //<-- TEMPERARY DEBUGGING FUNCTION !-->
 // Our simple asynchronous handler function
@@ -232,28 +232,30 @@ class Simulation
         // equal to the width of the sim * the height * the depth
         sycl::range<1> * node_count;
 
-        ////////////////////////////////////////////////////////////////////////////////////////////////
-        // these four reference vars allow for an a-dimentioned Lattice Boltzmann Method (LBM) solver //
-        // this also allows for the solver to cover more types of fluids, more easily                 //
-        ////////////////////////////////////////////////////////////////////////////////////////////////
-
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+        // these six reference vars allow for an a-dimentioned Lattice Boltzmann Method (LBM) solver //
+        // this also allows for the solver to cover more types of fluids, more easily                //
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+        
         // reference length in meters, 
         // is also the distance between two nodes
-        float ref_len = 1.0f; 
+        float ref_len; 
 
         // reference length in seconds 
-        float ref_time = 1.0f; 
+        float ref_time;
 
         // reference density in ??
-        float ref_density = 1.0f; 
+        float ref_density;
 
         // reference speed in meters per second (m/s)
-        float ref_speed = ref_time / ref_density; 
+        float ref_speed; 
+
+        float speed_of_sound = 1.0f / sycl::sqrt(3.0f);
         
         // this changes the time it takes for the fluid to relax back to the equlibrium state
         // is related semi-directly to the fluid's viscosity 
-        // a value above 0 and less than approx 2.5, higher values become unstable
-        float tau = 2.1f;
+        // a value above 0, values close to 0 become unstable
+        float tau = 2.3f;
 
         ///////////////////////////////////////////////
         // macroscopic variables                     //
@@ -290,15 +292,33 @@ class Simulation
         // a value containing a pointer to the current macroscopic density array
         std::atomic<float*> density_array; 
 
-    //constructor
-    Simulation(int width, int height, int depth)
+    /**
+     * width: the width of the sim, in number of nodes
+     * height: the height of the sim, in number of nodes
+     * depth: the depth of the sim, in number of nodes
+     * density: the density of the fluid being modeled
+     * visocity: the visocity of the fluid being modeled
+     * speed_of_sound: the speed of sound of the fluid being modeled in meters per second
+     * node_size: the distance between each node in meters
+     */
+    Simulation(int width, int height, int depth, float density, float visocity, float speed_of_sound, float node_size, float cyc_radius)
     {
-        this->q = sycl::queue(sycl::cpu_selector_v);
+        this->q = sycl::queue(sycl::gpu_selector_v);
         std::cout << "running simulation on -> " << q.get_device().get_info<sycl::info::device::name>() << std::endl;
 
         this->height = height;
         this->width = width;
         this->depth = depth;
+
+        // reference constants for a-dimensionality 
+        this->ref_len = node_size;
+        this->ref_density = density;
+        this->ref_time = this->ref_len / (sycl::sqrt(3.0f) * speed_of_sound);
+        this->ref_speed = this->ref_len / this->ref_time;
+        this->tau = (this->ref_time * visocity) / (this->ref_len * this->ref_len * this->ref_speed * this->ref_speed) + 0.5f;
+
+        this->tau = 0.8f;
+
 
         this->dims = new sycl::range<3>(width, height, depth);
         this->discrete_density_buffer_length = new sycl::range<1>(width * height * depth * possible_velocities_number);
@@ -312,12 +332,14 @@ class Simulation
         // the reflected possible velocity index for a given possible velocity index
         this->relective_index_table_new_buffer = new sycl::buffer<uint8_t, 1>(this->relective_index_table_new, possible_velocities_number);
 
+
         // if this node is a boundary node, and which type is it
         this->changeable_buffer         = new sycl::buffer<uint8_t, 1>(*this->node_count);
         // a list of the paricle amounts for each descrete velocity for each node
         this->discrete_density_buffer_1 = new sycl::buffer<float, 1>(*this->discrete_density_buffer_length);
         // the second list of the paricle amounts for each descrete velocity for each nod
         this->discrete_density_buffer_2 = new sycl::buffer<float, 1>(*this->discrete_density_buffer_length);
+
 
         // macrosopic varibles, used in the equlibrium density function defined above this class
         this->macro_density_buffer = new sycl::buffer<float, 1>(*this->node_count);
@@ -353,12 +375,22 @@ class Simulation
             {
                 device_accessor_discrete_density_buffer_1[i] = device_accessor_velocities_weights[i % 27];
 
-                if(i / 27 == (width / 2) + (height / 2) * width + (depth / 2) * width * height ) 
-                {
-                    if(i % 27 == 0) { device_accessor_discrete_density_buffer_1[i] = 100.0f; }
-                }
+                // if(i / 27 == (width / 2) + (height / 2) * width + (depth / 2) * width * height ) 
+                // {
+                //     if(i % 27 == 0) { device_accessor_discrete_density_buffer_1[i] = 100.0f; }
+                // }
             });
         }).wait();
+
+        // add a bit of random noise to the density buffer
+        {
+            auto accessor = discrete_density_buffer_1->get_host_access();
+            for (uint64_t i = 0; i < node_count->get(0); i++)
+            {
+                accessor[i] += ((rand() % 100) - 50) / 1000.0f;
+            }
+            
+        }
         
         // set which nodes are boundary nodes
         this->q.submit([&](sycl::handler& h) 
@@ -369,23 +401,29 @@ class Simulation
             h.parallel_for(*this->dims, [=](sycl::id<3> i) 
             {
                 int64_t index = i.get(0) + i.get(1) * width + i.get(2) * width * height;
+
                 device_accessor_changeable_buffer[index] = 0;
 
-                // float r = 3.0f;
-                // float r_square = r * r;
+                // float r = 6.0f;
+                float r_square = cyc_radius * cyc_radius;
 
-                // float x = i.get(0) - (width / 2);
-                // float z = i.get(2) - (depth / 2);
+                float x = i.get(0) - (width / 2.0f);
+                float z = i.get(2) - (depth / 6.0f);
 
-                // if( x*x + z*z < r_square )
-                // {
-                //     device_accessor_changeable_buffer[index] = 1;
-                // }
+                if( x*x + z*z < r_square )
+                {
+                    device_accessor_changeable_buffer[index] = 1;
+                }
+
+                if(i.get(0) == 0 || i.get(0) == width - 1)
+                {
+                    device_accessor_changeable_buffer[index] = 1;
+                }
                 
-                // if(i.get(2) == 0 || i.get(2) == depth - 1)
-                // {
-                //     device_accessor_changeable_buffer[index] = 2;
-                // }
+                if(i.get(2) == 0 || i.get(2) == depth - 1)
+                {
+                    device_accessor_changeable_buffer[index] = 2;
+                }
             });
         }).wait();
         
@@ -493,6 +531,16 @@ class Simulation
         free(this->vectors2);
     }
 
+    sycl::host_accessor<float, 1, sycl::access_mode::read> get_accessor_for_discrete_density_buffer_1()
+    {
+        return this->discrete_density_buffer_1->get_host_access();
+    }
+    
+    sycl::host_accessor<uint8_t, 1, sycl::access_mode::read> get_accessor_for_changeable_buffer()
+    {
+        return this->changeable_buffer->get_host_access();
+    }
+
     /**
      * prints out an amount of values of the given buffer to the std output
      * uses a host accessor to do so and should only be used for debugging purposes
@@ -531,7 +579,7 @@ class Simulation
 
     void next_frame(float dt)
     {
-        std::cout << "starting done" << std::endl;
+        // std::cout << "starting done" << std::endl;
 
         int local_possible_velocities_count = this->possible_velocities_number;
 
@@ -546,9 +594,9 @@ class Simulation
 
 
         // read out macroscopic variables for debugging purposes
-        read_out_values(this->discrete_density_buffer_1, 27);
+        // read_out_values(this->discrete_density_buffer_1, 27);
 
-        std::cout << "starting streaming..." << std::endl;
+        // std::cout << "starting streaming..." << std::endl;
 
         //event streaming = 
         this->q.submit([&](sycl::handler& h) 
@@ -567,18 +615,17 @@ class Simulation
                                     + node_position.get(2) * local_dims.get(0) * local_dims.get(1)
                                     ) * 27; // WARNING: supports up to a cube of ~ 880_748 by 880_748 by 880_748 nodes
 
-                // copy the velcoity with value (0, 0, 0)  
+                // copy the velocity with value (0, 0, 0)  
                 device_accessor_velocity_buffer_2[node_index] = device_accessor_discrete_density_buffer_1[node_index];
 
-                // loop over all the vectors and grab the particles that will move to the current node,
+                // loop over all the rest of the vectors and grab the particles that will move to the current node,
                 // and assign them to the associated velocity on the current node
-                // also skip the velocity with value (0, 0, 0) as it does not change
                 for (uint8_t i = 1; i < local_possible_velocities_count; i++)
                 {
                     // get where the particles are coming from
                     // if the position to get the particles from is out of bounds it wraps around (the modulo operation)
                     uint64_t from_node_index = (
-                                               ((node_position.get(0) - device_accessor_possible_velocities[i * 3]) % local_dims.get(0))
+                                               ((node_position.get(0) - device_accessor_possible_velocities[i * 3])     % local_dims.get(0))
                                              + ((node_position.get(1) - device_accessor_possible_velocities[i * 3 + 1]) % local_dims.get(1)) * local_dims.get(0) 
                                              + ((node_position.get(2) - device_accessor_possible_velocities[i * 3 + 2]) % local_dims.get(2)) * local_dims.get(0) * local_dims.get(1)
                                             ) * 27;
@@ -589,12 +636,12 @@ class Simulation
             });
         }).wait();
 
-        std::cout << "streaming done" << std::endl;
+        // std::cout << "streaming done" << std::endl;
 
         // read out macroscopic variables for debugging purposes
-        read_out_values(this->discrete_density_buffer_2, 27);
+        // read_out_values(this->discrete_density_buffer_2, 27);
 
-        std::cout << "calculating macroscopic density" << std::endl;
+        // std::cout << "calculating macroscopic density" << std::endl;
 
         // calculate per node macroscopic density
         //event macroscopic_density = 
@@ -616,7 +663,7 @@ class Simulation
             });
         });
 
-        std::cout << "calculating macroscopic velocity" << std::endl;
+        // std::cout << "calculating macroscopic velocity" << std::endl;
 
         // calculate per node macroscopic velocity
         //event macroscopic_velocity = 
@@ -642,9 +689,11 @@ class Simulation
 
                 for (int i = 0; i < local_possible_velocities_count; i++)
                 {
-                    macro_velocity_x += device_accessor_discrete_density_buffer_2[node_index * 27 + i] * device_accessor_possible_velocities[i * 3];
-                    macro_velocity_y += device_accessor_discrete_density_buffer_2[node_index * 27 + i] * device_accessor_possible_velocities[i * 3 + 1];
-                    macro_velocity_z += device_accessor_discrete_density_buffer_2[node_index * 27 + i] * device_accessor_possible_velocities[i * 3 + 2];
+                    float density = device_accessor_discrete_density_buffer_2[node_index * 27 + i];
+
+                    macro_velocity_x += density * device_accessor_possible_velocities[i * 3];
+                    macro_velocity_y += density * device_accessor_possible_velocities[i * 3 + 1];
+                    macro_velocity_z += density * device_accessor_possible_velocities[i * 3 + 2];
                 }
 
                 float node_density = device_accessor_macro_density[node_index];
@@ -662,14 +711,14 @@ class Simulation
         });
 
         // read out macroscopic variables for debugging purposes
-        std::cout << "macro density" << "\n";
-        read_out_values(this->macro_density_buffer, 5);
-        std::cout << "macro vel" << "\n";
-        read_out_values(this->macro_velocity_x, 10);
-        read_out_values(this->macro_velocity_y, 10);
-        read_out_values(this->macro_velocity_z, 10);
+        // std::cout << "macro density" << "\n";
+        // read_out_values(this->macro_density_buffer, 5);
+        // std::cout << "macro vel" << "\n";
+        // read_out_values(this->macro_velocity_x, 10);
+        // read_out_values(this->macro_velocity_y, 10);
+        // read_out_values(this->macro_velocity_z, 10);
 
-        std::cout << "starting collision..." << std::endl;
+        // std::cout << "starting collision..." << std::endl;
 
         //event collision = 
         this->q.submit([&](sycl::handler& h) 
@@ -743,9 +792,9 @@ class Simulation
             });
         }).wait();
 
-        std::cout << "collision done" << std::endl;
+        // std::cout << "collision done" << std::endl;
 
-        read_out_values(this->discrete_density_buffer_1, 27);
+        // read_out_values(this->discrete_density_buffer_1, 27);
         
         // copy the vectors buffer data to one of the vector arrays on the host 
         if(which_vectors_array)
@@ -791,7 +840,7 @@ class Simulation
             }).wait();
         }
 
-        std::cout << "copy back done" << std::endl;
+        // std::cout << "copy back done" << std::endl;
 
         this->q.wait();
     }

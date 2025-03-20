@@ -1,6 +1,5 @@
 using System;
-using System.ComponentModel.DataAnnotations;
-using Microsoft.VisualBasic;
+
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -19,7 +18,7 @@ public class Arrow : Object
 
     public Arrow(Vector3 position, Vector3 direction, Color color, GraphicsDevice graphics_device) 
     : base(position, 
-           new Quaternion(Vector3.Cross(Vector3.Right, Vector3.Normalize(direction)), Vector3.Dot(Vector3.Right, Vector3.Normalize(direction))),
+           new Quaternion(Vector3.Cross(Vector3.Backward, Vector3.Normalize(direction)), Vector3.Dot(Vector3.Backward, Vector3.Normalize(direction))),
            graphics_device)
     {
         this.magnitude = direction.Length();
@@ -47,7 +46,11 @@ public class Arrow : Object
     {
         this.magnitude = direction.Length();
 
-        this.rotation = new Quaternion(Vector3.Cross(Vector3.Right, Vector3.Normalize(direction)), Vector3.Dot(Vector3.Right, Vector3.Normalize(direction)));
+        // from: https://stackoverflow.com/questions/1171849/finding-quaternion-representing-the-rotation-from-one-vector-to-another
+        // vector a = crossproduct(v1, v2);
+        // q.xyz = a;
+        // q.w = sqrt((v1.Length ^ 2) * (v2.Length ^ 2)) + dotproduct(v1, v2);
+        this.rotation = new Quaternion(Vector3.Cross(Vector3.Backward, Vector3.Normalize(direction)), Vector3.Dot(Vector3.Backward, Vector3.Normalize(direction)));
 
         updateVerts();
     }
@@ -58,7 +61,7 @@ public class Arrow : Object
 
         this.magnitude = direction.Length();
 
-        this.rotation = new Quaternion(Vector3.Cross(Vector3.Right, Vector3.Normalize(direction)), Vector3.Dot(Vector3.Right, Vector3.Normalize(direction)));
+        this.rotation = new Quaternion(Vector3.Cross(Vector3.Backward, Vector3.Normalize(direction)), Vector3.Dot(Vector3.Backward, Vector3.Normalize(direction)));
 
         updateVerts();
     }
@@ -82,8 +85,8 @@ public class Arrow : Object
     {
         this.world_matix = Matrix.CreateTranslation(this.position);
 
-        Vector3 point = Vector3.Transform(Vector3.Right * magnitude, this.rotation);
-        Vector3 offset = Vector3.Transform(Vector3.Backward * magnitude / 10f, this.rotation);
+        Vector3 point = Vector3.Transform(Vector3.Backward * magnitude, this.rotation);
+        Vector3 offset = Vector3.Transform(Vector3.Right * magnitude / 10f, this.rotation);
 
         vertices[0] = new VertexPositionColor(Vector3.Zero, this.color);
         vertices[1] = new VertexPositionColor(point, this.color);
@@ -97,7 +100,7 @@ public class Arrow : Object
     public override void Draw(BasicEffect effect) 
     {
         graphics_device.SetVertexBuffer(vertex_buffer);
-        effect.World = Matrix.CreateTranslation(this.position);
+        effect.World = this.world_matix;
         
         foreach(EffectPass pass in effect.CurrentTechnique.Passes) 
         {
@@ -152,14 +155,8 @@ public class ArrowCollection : Object
         {
             float magnitude = directions[i].Length();
             Vector3 direction;
-            if(magnitude > 0.8f)
-            {
-                direction = Vector3.Normalize(directions[i]) * 0.8f;
-            }
-            else 
-            {
-                direction = directions[i];
-            }
+            
+            direction = Vector3.Normalize(directions[i]) * 0.8f;
 
             Color color = Color.Lerp(start, end, MathF.Min(magnitude / max_magnitude, 1.0f));
 
