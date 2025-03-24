@@ -171,6 +171,7 @@ public class VoxelObject : Object
 
     public override void Draw(BasicEffect effect)
     {
+        effect.World = Matrix.CreateTranslation(this.position);
         for (int i = 0; i < vertex_buffers.Length; i++)
         {
             graphics_device.SetVertexBuffer(this.vertex_buffers[i]);

@@ -1,4 +1,3 @@
-#include <vector>
 #include <sycl/sycl.hpp>
 
 /**

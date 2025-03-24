@@ -1,5 +1,6 @@
 using System;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Graphics;
 
 namespace Objects;
@@ -14,13 +15,14 @@ public class Simulation : Object
     public float[] densities; 
 
     private static Color density_color_start = Color.Black;
-    private static Color density_color_end = Color.WhiteSmoke;
+    private static Color density_color_end = Color.White;
 
     public VoxelObject voxel_object;
     public ArrowCollection[] micro_flow_arrows;
     public ArrowCollection macro_flow_arrows;
 
     public bool draw_macro_arrows = true;
+    public bool draw_density_voxel_object = true;
 
     public int width;
     public int height;
@@ -114,8 +116,9 @@ public class Simulation : Object
         {
             throw new ArgumentException("new_velocities number of sub arrays is not 27");
         }
-
-        this.micro_velocities = new_velocities;
+        this.micro_velocities = new Vector3[27][];
+        new_velocities.CopyTo(micro_velocities, 0);
+        
 
         this.width = width;
         this.height = height;
@@ -176,23 +179,9 @@ public class Simulation : Object
             switch(changeablility[i]) 
             {
                 case 0:
-                    float t = (new_densities[i] - minimum_density) / maximum_density;
+                    float t = (new_densities[i] - minimum_density) / (maximum_density - minimum_density);
 
-                    static float expLerp(float t)
-                    {
-                        return t > 1 ? 1 : 1 - MathF.Pow(2, -10*t);
-                    }
-
-                    t = expLerp(t);
-
-                    if(t < 0.001f)
-                    {
-                        color = new Color(0.0f, 0.0f, 0.0f, 0.0f);
-                    }
-                    else
-                    {
-                        color = Color.Lerp(density_color_start, density_color_end, t);
-                    }
+                    color = Color.Lerp(density_color_start, density_color_end, t);
                 break;
 
                 case 1:
@@ -203,8 +192,12 @@ public class Simulation : Object
                     color = Color.Green;
                 break;
 
+                case 3:
+                    color = Color.Brown;
+                break;
+
                 default:
-                    color = new Color(0, 0, 0, 0);
+                    color = Color.HotPink;
                 break;
             }
 
@@ -235,7 +228,10 @@ public class Simulation : Object
     {
         if(voxel_object is null) { return; }
 
-        // this.voxel_object.Draw(effect);
+        if(draw_density_voxel_object)
+        {
+            this.voxel_object.Draw(effect);
+        }
 
         if(draw_macro_arrows)
         {

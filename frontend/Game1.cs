@@ -76,7 +76,6 @@ public class Game1 : Game
         basic_effect.AmbientLightColor = new Vector3(0.5f,0.5f,0.5f);
         basic_effect.EmissiveColor = new Vector3(0.5f, 0.5f, 0.5f);
 
-
         // TODO: Add your initialization logic here
         current_level = new LevelSelector(screen_x, screen_y, this);
 
@@ -114,7 +113,6 @@ public class Game1 : Game
 
     float dt = 0; // delta time in seconds
 
-    MouseState last_mouse = Mouse.GetState();
     MouseState mouse = Mouse.GetState();
     KeyboardState last_keyboard = Keyboard.GetState();
     KeyboardState keyboard = Keyboard.GetState();
@@ -125,7 +123,6 @@ public class Game1 : Game
 
         last_keyboard = keyboard;
         keyboard = Keyboard.GetState();
-        last_mouse = mouse;
         mouse = Mouse.GetState();
 
         Mouse.SetPosition(screen_middle.X, screen_middle.Y); // lock mouse to screen
@@ -172,7 +169,7 @@ public class Game1 : Game
         base.Update(gameTime);
     }
 
-    Color background_color = new Color(0.3f,0.3f,0.3f);
+    Color background_color = new Color(0.2f, 0.2f, 0.2f);
     protected override void Draw(GameTime gameTime)
     {
         double frame_rate = 1.0 / gameTime.ElapsedGameTime.TotalSeconds;
@@ -197,7 +194,7 @@ public class Game1 : Game
         
         _spriteBatch.DrawString(font, frame_rate.ToString(), Vector2.One, Color.WhiteSmoke, 0, Vector2.Zero, 0.3f, SpriteEffects.None, 0f);
 
-        _spriteBatch.DrawString(font, camera.position.ToString(), new Vector2(screen_x - (camera.position.ToString().Length * 13),1), Color.WhiteSmoke, 0, Vector2.Zero, 0.3f, SpriteEffects.None, 0f);
+        _spriteBatch.DrawString(font, camera.position.ToString(), new Vector2(screen_x - (camera.position.ToString().Length * 13),1), Color.WhiteSmoke, 0, Vector2.Zero, 0.3f, SpriteEffects.None, 0f);        
 
         _spriteBatch.End();
         base.Draw(gameTime);

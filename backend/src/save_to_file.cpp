@@ -13,7 +13,8 @@
 #include <iostream>
 #include <atomic>
 
-#include <fstream>
+#include <fstream> // write to files
+#include <chrono> // get the time it took to run the simulation
 
 ////////////
 //  SYCL  //
@@ -43,8 +44,14 @@ void write_to_file(std::ofstream & file, Simulation & sim)
 }
 
 std::string filename = "test.txt";
-int main()
+int main(int argc, char *argv[])
 {
+    if(argc < 3 || argc > 3)
+    {
+        std::cout << "usage: " << argv[0] << " tau_value cylinder_radius" << std::endl;
+        return 0;
+    }
+
     std::cout << "writing to file: " << filename << std::endl;
 
     std::ofstream file;
@@ -58,10 +65,11 @@ int main()
 
     // set up memory
     // initilize the simulation
-    Simulation sim(130, 1, 150, 1.225f, 0.00001f, 343, 0.02f, 55.0f);
+
+    Simulation sim(20, 1, 200, 1.225f, 0.00001f, 343, 0.02f, std::stof(argv[2]), std::stof(argv[1]));
 
     sycl::range<3> temp_dims = sim.get_dimensions();
-
+    
     std::cout << "simulation: width is " << temp_dims.get(0) << ", height is " << temp_dims.get(1) << ", depth is " << temp_dims.get(2) << "\n";
 
     // write the dimentions to the top line in the file
@@ -71,16 +79,16 @@ int main()
     std::atomic<bool> exit = std::atomic<bool>();
     exit.store(false);
 
+    long sec = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+
     while(true)
     {
-        // TODO: add proper timing and fps counter for stats
-        std::cout << "// frame " << count << " //\n";
-
-        sim.next_frame(1.0f);
-
         write_to_file(file, sim);
+        
+        sim.next_frame();
 
-        if(count > 500) { exit.store(true); }
+
+        if(count > 1000) { exit.store(true); }
 
         if(exit.load())
         {
@@ -93,6 +101,9 @@ int main()
 
     file.close();
 
+    sec = std::chrono::duration_cast<std::chrono::milliseconds> ( std::chrono::system_clock::now().time_since_epoch() ).count() - sec;
+
+    std::cout << "\ntook " << sec / 1000.0f << " seconds\n";
     std::cout << "\n---data written successfully---\n\n";
 
     return 0;

@@ -22,7 +22,7 @@ public class ReadFileLevel2D : ILevel
 
     Texture2D current_texture;
 
-    public int number_of_frames;
+    public int frame_count;
     private int current_frame;
     private int current_height = 0;
 
@@ -46,11 +46,13 @@ public class ReadFileLevel2D : ILevel
     private int screen_width;
     private int screen_height;
 
+    private Dictionary<Keys, int> numpad_key_to_frame_number;
+
 
     public ReadFileLevel2D(string filepath, GraphicsDevice graphics_device, int screen_width, int screen_height) 
     {
         this.filepath = filepath;
-        this.number_of_frames = 0;
+        this.frame_count = 0;
 
         this.screen_width = screen_width;
         this.screen_height = screen_height;
@@ -60,6 +62,8 @@ public class ReadFileLevel2D : ILevel
         this.changeable_frames = new List<int[]>();
         this.density_frames = new List<float[]>();
         this.velocity_frames = new List<Texture2D[]>();
+
+        this.numpad_key_to_frame_number = new Dictionary<Keys, int>();
     }
 
     public void draw(BasicEffect effect, GraphicsDevice graphics_device, SpriteBatch sprite_batch, Camera camera)
@@ -81,7 +85,7 @@ public class ReadFileLevel2D : ILevel
     {
         // read file
         string[] lines = File.ReadAllLines(filepath);
-        this.number_of_frames = lines.Length;
+        this.frame_count = lines.Length;
 
         string[] dims = lines[0].Trim().Split(" ");
 
@@ -90,6 +94,7 @@ public class ReadFileLevel2D : ILevel
         this.simulation_depth  = int.Parse(dims[2]);
 
         this.node_count = simulation_width * simulation_height * simulation_depth;
+        int slice_node_count = simulation_width * simulation_depth;
 
         for (int i = 1; i < lines.Length; i++)
         {
@@ -98,7 +103,7 @@ public class ReadFileLevel2D : ILevel
             Color[][] temp_texures_colors = new Color[this.simulation_height][];
             for (int j = 0; j < this.simulation_height; j++)
             {
-                temp_texures_colors[j] = new Color[this.simulation_width * this.simulation_depth];
+                temp_texures_colors[j] = new Color[slice_node_count];
             }
 
             string line = lines[i];
@@ -128,12 +133,12 @@ public class ReadFileLevel2D : ILevel
             }
             max_len = MathF.Sqrt(max_len);
 
-            for (int j = 0; j < node_count; j++)
+            for (int j = 0; j < slice_node_count; j++)
             {
                 int y = j / this.simulation_width % this.simulation_height;
 
                 float magnitude = temp_vectors[j].Length();
-                Color color;
+                Color color = Color.Black;
                 if(temp_change[j] == 0)
                 {
                     color = Color.Lerp(start, end, MathF.Min(magnitude / max_len, 1.0f));
@@ -145,10 +150,6 @@ public class ReadFileLevel2D : ILevel
                 else if(temp_change[j] == 2)
                 {
                     color = Color.Green;
-                }
-                else
-                {
-                    color = Color.Black;
                 }
                 temp_texures_colors[y][j] = color;
             }
@@ -169,7 +170,18 @@ public class ReadFileLevel2D : ILevel
         // and setup init frame of the simulation
         this.current_height = 0;
         this.current_frame = 0;
-        this.number_of_frames = density_frames.Count;
+        this.frame_count = density_frames.Count;
+                
+        numpad_key_to_frame_number.Add(Keys.NumPad1, (int)(frame_count * 0.1f));
+        numpad_key_to_frame_number.Add(Keys.NumPad2, (int)(frame_count * 0.2f));
+        numpad_key_to_frame_number.Add(Keys.NumPad3, (int)(frame_count * 0.3f));
+        numpad_key_to_frame_number.Add(Keys.NumPad4, (int)(frame_count * 0.4f));
+        numpad_key_to_frame_number.Add(Keys.NumPad5, (int)(frame_count * 0.5f));
+        numpad_key_to_frame_number.Add(Keys.NumPad6, (int)(frame_count * 0.6f));
+        numpad_key_to_frame_number.Add(Keys.NumPad7, (int)(frame_count * 0.7f));
+        numpad_key_to_frame_number.Add(Keys.NumPad8, (int)(frame_count * 0.8f));
+        numpad_key_to_frame_number.Add(Keys.NumPad9, (int)(frame_count * 0.9f));
+        numpad_key_to_frame_number.Add(Keys.NumPad0, (int)(frame_count * 1.0f) - 1);
 
         this.current_texture = this.velocity_frames[current_frame][current_height];
     }
@@ -185,8 +197,8 @@ public class ReadFileLevel2D : ILevel
         if(keyboard_state.IsKeyDown(Keys.Right) && last_keyboard_state.IsKeyUp(Keys.Right))
         {
             current_frame++;
-            if(current_frame > number_of_frames - 1) {
-                current_frame = number_of_frames - 1;
+            if(current_frame > frame_count - 1) {
+                current_frame = frame_count - 1;
             }
             else
             {
@@ -233,6 +245,17 @@ public class ReadFileLevel2D : ILevel
             }
         }
 
+        // change to frame_count / num key # frame
+        foreach (Keys key in numpad_key_to_frame_number.Keys)
+        {
+            if(keyboard_state.IsKeyDown(key) && last_keyboard_state.IsKeyUp(key))
+            {
+                this.current_frame = numpad_key_to_frame_number[key];
+
+                this.current_texture = velocity_frames[current_frame][current_height];
+            }
+        }
+
         if(keyboard_state.IsKeyDown(Keys.Space))
         {
             frame_timer += dt;
@@ -242,7 +265,7 @@ public class ReadFileLevel2D : ILevel
                 current_frame++;
                 
                 // loops
-                if(current_frame > number_of_frames - 1) {
+                if(current_frame > frame_count - 1) {
                     current_frame = 0;
                 }
 
@@ -262,9 +285,9 @@ public class ReadFileLevel2D : ILevel
         
         if(keyboard_state.IsKeyDown(Keys.M)) 
         {
-            if(current_frame != number_of_frames - 1)
+            if(current_frame != frame_count - 1)
             {
-                current_frame = number_of_frames - 1;
+                current_frame = frame_count - 1;
 
                 this.current_texture = velocity_frames[current_frame][current_height];
             }
