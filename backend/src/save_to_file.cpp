@@ -66,7 +66,7 @@ int main(int argc, char *argv[])
     // set up memory
     // initilize the simulation
 
-    Simulation sim(20, 1, 200, 1.225f, 0.00001f, 343, 0.02f, std::stof(argv[2]), std::stof(argv[1]));
+    Simulation sim(20, 1, 80, 1.225f, 0.00001f, 343, 0.02f, std::stof(argv[2]), std::stof(argv[1]));
 
     sycl::range<3> temp_dims = sim.get_dimensions();
     

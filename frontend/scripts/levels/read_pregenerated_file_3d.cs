@@ -29,8 +29,6 @@ public class ReadFileLevel3D : ILevel
 
     private int node_count;
 
-    private int current_node = 0;
-
     private string filepath;
 
     private Simulation sim;
@@ -59,51 +57,6 @@ public class ReadFileLevel3D : ILevel
         effect.View = camera.view_matrix;
 
         sim.Draw(effect);
-
-        VoxelObject v = new VoxelObject(Vector3.Zero, Quaternion.Identity, [new Vector3(current_node % simulation_width, current_node / simulation_width % simulation_height, current_node / (simulation_width * simulation_height))], [Color.BurlyWood], 0.3f, graphics_device);
-        v.Draw(effect);
-
-        sprite_batch.DrawString(font, "current frame = " + current_frame.ToString(), new Vector2(10, 130), Color.White, 0, Vector2.Zero, 0.3f, SpriteEffects.None, 0f);
-
-        sprite_batch.DrawString(font, "current node: " + current_node, new Vector2(10, 150), Color.White, 0, Vector2.Zero, 0.3f, SpriteEffects.None, 0f);
-
-        float density = 0.0f;
-        for (int i = 0; i < 27; i++)
-        {
-            Vector3 vec = velocity_frames[current_frame][i][current_node];
-
-            density += vec.Length();
-
-            sprite_batch.DrawString(font, vec.ToString(), new Vector2(10, 170 + i * 20), Color.White, 0, Vector2.Zero, 0.2f, SpriteEffects.None, 0f);
-        }
-        sprite_batch.DrawString(font, density.ToString(), new Vector2(10, 170 + 27 * 20), Color.White, 0, Vector2.Zero, 0.2f, SpriteEffects.None, 0f);
-
-        sprite_batch.DrawString(font, sim.densities[current_node].ToString(), new Vector2(10, 170 + 28 * 20), Color.White, 0, Vector2.Zero, 0.2f, SpriteEffects.None, 0f);
-
-        for (int i = 0; i < 27; i++)
-        {
-            Vector3 vec = new Vector3(current_node % simulation_width, current_node / simulation_width % simulation_height, current_node / (simulation_width * simulation_height));
-            vec = vec - Simulation.possible_velocities[i];
-
-            vec.X = (int)vec.X;
-            vec.Y = (int)vec.Y;
-            vec.Z = (int)vec.Z;
-
-            vec.X = vec.X < 0 ? simulation_width - 1 : vec.X;
-            vec.Y = vec.Y < 0 ? simulation_height - 1 : vec.Y;
-            vec.Z = vec.Z < 0 ? simulation_depth - 1 : vec.Z;
-
-            vec.X = vec.X > simulation_width - 1 ? 0 : vec.X;
-            vec.Y = vec.Y > simulation_height - 1 ? 0 : vec.Y;
-            vec.Z = vec.Z > simulation_depth - 1 ? 0 : vec.Z;
-
-            vec.X = (int)vec.X;
-            vec.Y = (int)vec.Y;
-            vec.Z = (int)vec.Z;
-
-            sprite_batch.DrawString(font, vec.ToString(), new Vector2(220, 170 + i * 20), Color.White, 0, Vector2.Zero, 0.2f, SpriteEffects.None, 0f);
-        }
-
     }
 
     public string getName()
@@ -273,39 +226,6 @@ public class ReadFileLevel3D : ILevel
 
             sim.SetVelocity(velocity_frames[current_frame], simulation_width, simulation_height, simulation_depth);
         }
-
-        // keys to move around the view node, node, which displays data in numeric form aabout the currently selected node
-        if(keyboard_state.IsKeyDown(Keys.I) && last_keyboard_state.IsKeyUp(Keys.I))
-        {
-            current_node += simulation_width;    
-        }
-
-        if(keyboard_state.IsKeyDown(Keys.J) && last_keyboard_state.IsKeyUp(Keys.J))
-        {
-            ++current_node;
-        }
-
-        if(keyboard_state.IsKeyDown(Keys.K) && last_keyboard_state.IsKeyUp(Keys.K))
-        {
-            current_node -= simulation_width;    
-        }
-
-        if(keyboard_state.IsKeyDown(Keys.L) && last_keyboard_state.IsKeyUp(Keys.L))
-        {
-            --current_node;
-        }
-
-        if(keyboard_state.IsKeyDown(Keys.U) && last_keyboard_state.IsKeyUp(Keys.U))
-        {
-            current_node += simulation_width * simulation_height;
-        }
-
-        if(keyboard_state.IsKeyDown(Keys.O) && last_keyboard_state.IsKeyUp(Keys.O))
-        {
-            current_node -= simulation_width * simulation_height;
-        }
-        if(current_node > simulation_width * simulation_height * simulation_depth) { current_node = simulation_width * simulation_height * simulation_depth; }
-        if(current_node < 0) { current_node = 0; }
     }
 
     public void close() 
