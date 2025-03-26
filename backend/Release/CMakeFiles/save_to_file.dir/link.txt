@@ -1,1 +1,1 @@
-/opt/intel/oneapi/compiler/2025.0/bin/icpx -O3 -DNDEBUG -fsycl -fast CMakeFiles/save_to_file.dir/src/save_to_file.cpp.o -o save_to_file  -Wl,-rpath,/usr/local/lib /usr/local/lib/libPocoNet.so.110 -lsycl /usr/local/lib/libPocoFoundation.so.110 -lpthread -ldl -lrt 
+/opt/intel/oneapi/compiler/2025.0/bin/icpx -O3 -DNDEBUG -fsycl -fast CMakeFiles/save_to_file.dir/src/save_to_file.cpp.o -o save_to_file  /home/lefler/Documents/gitRepos/waterSim/backend/libraries/libPocoNet.a 

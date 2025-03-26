@@ -92,8 +92,7 @@ save_to_file_EXTERNAL_OBJECTS =
 
 save_to_file: CMakeFiles/save_to_file.dir/src/save_to_file.cpp.o
 save_to_file: CMakeFiles/save_to_file.dir/build.make
-save_to_file: /usr/local/lib/libPocoNet.so.110
-save_to_file: /usr/local/lib/libPocoFoundation.so.110
+save_to_file: /home/lefler/Documents/gitRepos/waterSim/backend/libraries/libPocoNet.a
 save_to_file: CMakeFiles/save_to_file.dir/link.txt
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/lefler/Documents/gitRepos/waterSim/backend/Release/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Linking CXX executable save_to_file"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/save_to_file.dir/link.txt --verbose=$(VERBOSE)
