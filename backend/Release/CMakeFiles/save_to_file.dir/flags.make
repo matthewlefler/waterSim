@@ -6,5 +6,5 @@ CXX_DEFINES =
 
 CXX_INCLUDES = 
 
-CXX_FLAGS = -fsycl
+CXX_FLAGS = -O3 -DNDEBUG -fsycl -fast
 

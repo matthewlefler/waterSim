@@ -7,13 +7,15 @@ cmake_minimum_required(VERSION 3.10)
 
 project(waterSim CXX)
 
+find_package(Poco REQUIRED Net)
+
 # amd gpu specific compile/link command arguments
-set(COMPILE_FLAGS_AMD "-fsycl -fsycl-targets=amdgcn-amd-amdhsa -Xsycl-target-backend --offload-arch=gfx1102")
-set(LINK_FLAGS_AMD "-fsycl -fsycl-targets=amdgcn-amd-amdhsa -Xsycl-target-backend --offload-arch=gfx1102")
+set(COMPILE_FLAGS_AMD "-fast -fsycl -fsycl-targets=amdgcn-amd-amdhsa -Xsycl-target-backend --offload-arch=gfx1102")
+set(LINK_FLAGS_AMD "-fast -fsycl -fsycl-targets=amdgcn-amd-amdhsa -Xsycl-target-backend --offload-arch=gfx1102")
 
 # regular specific compile/link command arguments
-set(COMPILE_FLAGS "-fsycl")
-set(LINK_FLAGS "-fsycl")
+set(COMPILE_FLAGS "-fsycl -fast")
+set(LINK_FLAGS "-fsycl -fast")
 
 # amd gpu specific executables 
 add_executable(save_to_file_amd src/save_to_file.cpp)
