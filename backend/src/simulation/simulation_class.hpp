@@ -4,7 +4,13 @@
         slack: @skye 
 
     usecase:
-        defines and provides functions for a custom simulation class to model incompressible fluids and gas
+        defines and provides functions for a custom simulation class to model fluids and gas
+
+    useful websites:
+        https://feaforall.com/creating-cfd-solver-lattice-boltzmann-method/
+        
+        https://medium.com/swlh/create-your-own-lattice-boltzmann-simulation-with-python-8759e8b53b1c
+        https://medium.com/@ethan_38158/the-lattice-boltzmann-method-lbm-fluid-simulation-43a4fa248614
 */ 
 #include <iostream> // used for debugging via std out
 #include <atomic> // will use for having two copies of the velocity buffers and having an atomic bool to switch between them
@@ -13,7 +19,7 @@
 #include "float4_helper_functions.hpp" // some helper functions that act on sycl::float4 variables as 3d vectors such as the dot product
 #include "buffer_debug_funcs.hpp" // some helper functions for use in debugging sycl buffers 
 
-#include <sycl/sycl.hpp> // the main library used for parrellelism 
+#include <sycl/sycl.hpp> // the main library used for parellelism 
 
 /*
 return weight * density * ( 1 + first + second - third)
@@ -33,9 +39,9 @@ inline float f_eq(float weight, float density, float velocity_i_x, float velocit
  * this simulation uses the lattice boltzmann method (LBM) of computational fluid dynamics, currently a d3q27 (3 dimensional, 27 discrete velocities)
  * 
  * the simulation is made up of 
- *      a. nodes (points) in 3s space (which are enclosed in a rectangular prism)
+ *      a. nodes (points) in 3s space (which make up a rectangular prism)
  * 
- *      b. and of a number of velocities, often denoted as i in papers on this topic for some specific velocity of the total number, 
+ *      b. and of a number of velocities, often denoted as e_i in papers on this topic for some specific velocity of the total number, 
  *         these are the speeds that a particle at a particluar node can have 
  * 
  * the simulation works in two steps that are done for each call of the next_frame function 
@@ -51,9 +57,9 @@ inline float f_eq(float weight, float density, float velocity_i_x, float velocit
 class Simulation
 {
     private:
-        int width;
-        int height;
-        int depth;
+        int width;  // simulation width in number of nodes
+        int height; // simulation height in number of nodes
+        int depth;  // simulation depth in number of nodes
 
         sycl::queue q;
 
@@ -185,6 +191,13 @@ class Simulation
         const float flow_vec_y = 0.0f;
         const float flow_vec_z = 1.0f;
 
+        // an overall force vector that is applied to every node every tick
+        // in m/s
+        // most useful for gravity forces
+        const float force_vec_x = 0.0f;
+        const float force_vec_y = 0.0f;
+        const float force_vec_z = 0.0f;
+
         /////////////////////////////////////////
         // density information                 //
         // wrapped in buffers (memory objects) //
@@ -196,7 +209,7 @@ class Simulation
         // 0 = not a boundary node (do normal equlibrium collision)
         // 1 = a reflective boundary (reflect particles)
         // 2 = in/out flow (equal to the variables: flow_vec_x, flow_vec_y, flow_vec_z)
-        // 3 = sink, copies surounding cells (do no collision), set to weight
+        // 3 = sink, set to weight values in the collision step
         sycl::buffer<uint8_t, 1> * changeable_buffer; 
 
         // densities for each of the (27) velocities per position node. 
@@ -286,7 +299,15 @@ class Simulation
     // node_size: the distance between each node in meters
     Simulation(int width, int height, int depth, float density, float visocity, float speed_of_sound, float node_size, float cyc_radius, float tau)
     {
-        this->q = sycl::queue(sycl::gpu_selector_v);
+        sycl::device d;
+        try {
+            d = sycl::device(sycl::gpu_selector_v);
+        }
+        catch (sycl::exception const &e) {
+            d = sycl::device(sycl::cpu_selector_v);
+        }
+
+        this->q = sycl::queue(d);
         std::cout << "running simulation on -> " << q.get_device().get_info<sycl::info::device::name>() << std::endl;
 
         this->height = height;
