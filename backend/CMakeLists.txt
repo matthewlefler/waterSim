@@ -23,7 +23,8 @@ add_executable(save_to_file_amd src/save_to_file.cpp)
 set_target_properties(save_to_file_amd PROPERTIES COMPILE_FLAGS ${COMPILE_FLAGS_AMD})
 set_target_properties(save_to_file_amd PROPERTIES LINK_FLAGS ${LINK_FLAGS_AMD})
 
-# target_link_libraries(save_to_file_amd Poco::Net)
+target_link_libraries(save_to_file_amd Poco::Net)
+target_link_libraries(save_to_file_amd sycl)
 
 # add_executable(main_amd src/main.cpp)
 
@@ -38,7 +39,8 @@ add_executable(save_to_file src/save_to_file.cpp)
 set_target_properties(save_to_file PROPERTIES COMPILE_FLAGS ${COMPILE_FLAGS})
 set_target_properties(save_to_file PROPERTIES LINK_FLAGS ${LINK_FLAGS})
 
-# target_link_libraries(save_to_file Poco::Net)
+target_link_libraries(save_to_file Poco::Net)
+target_link_libraries(save_to_file sycl)
 
 # add_executable(main src/main.cpp)
 
