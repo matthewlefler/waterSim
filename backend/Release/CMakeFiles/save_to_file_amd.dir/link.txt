@@ -1,0 +1,1 @@
+/opt/intel/oneapi/compiler/2025.0/bin/icpx -fsycl -fsycl-targets=amdgcn-amd-amdhsa -Xsycl-target-backend --offload-arch=gfx1102 CMakeFiles/save_to_file_amd.dir/src/save_to_file.cpp.o -o save_to_file_amd 

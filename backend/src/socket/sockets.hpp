@@ -38,23 +38,11 @@
 #include "Poco/Net/TCPServer.h"
 #include "Poco/Net/TCPServerConnection.h"
 #include "Poco/Net/TCPServerConnectionFactory.h"
-
+#include "Poco/Net/SocketAddressImpl.h"
 #include "Poco/Net/StreamSocket.h"
 #include "Poco/Net/IPAddress.h"
 
-#include "sycl/sycl.hpp"
-
 const int send_buffer_length = 1024*10;
-
-
-void print(sycl::float4 val) 
-{
-    std::cout << "(" << val.x() << ", " << val.y() << ", " << val.z() << ", " << val.w() << ")\n";
-}
-void print(float val) 
-{
-    std::cout << val << "\n";
-}
 
 template<typename T>
 class EchoConnection: public Poco::Net::TCPServerConnection 

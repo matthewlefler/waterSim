@@ -1,0 +1,4 @@
+/home/lefler/Documents/gitRepos/waterSim/backend/Release/CMakeFiles/save_to_file_amd.dir
+/home/lefler/Documents/gitRepos/waterSim/backend/Release/CMakeFiles/save_to_file.dir
+/home/lefler/Documents/gitRepos/waterSim/backend/Release/CMakeFiles/edit_cache.dir
+/home/lefler/Documents/gitRepos/waterSim/backend/Release/CMakeFiles/rebuild_cache.dir
