@@ -117,24 +117,38 @@ depend:
 .PHONY : depend
 
 #=============================================================================
-# Target rules for targets named main
+# Target rules for targets named save_to_file_amd
 
 # Build rule for target.
-main: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 main
-.PHONY : main
+save_to_file_amd: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 save_to_file_amd
+.PHONY : save_to_file_amd
 
 # fast build rule for target.
-main/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/build
-.PHONY : main/fast
+save_to_file_amd/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/save_to_file_amd.dir/build.make CMakeFiles/save_to_file_amd.dir/build
+.PHONY : save_to_file_amd/fast
+
+#=============================================================================
+# Target rules for targets named save_to_file
+
+# Build rule for target.
+save_to_file: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 save_to_file
+.PHONY : save_to_file
+
+# fast build rule for target.
+save_to_file/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/save_to_file.dir/build.make CMakeFiles/save_to_file.dir/build
+.PHONY : save_to_file/fast
 
 src/save_to_file.o: src/save_to_file.cpp.o
 .PHONY : src/save_to_file.o
 
 # target to build an object file
 src/save_to_file.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/save_to_file.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/save_to_file_amd.dir/build.make CMakeFiles/save_to_file_amd.dir/src/save_to_file.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/save_to_file.dir/build.make CMakeFiles/save_to_file.dir/src/save_to_file.cpp.o
 .PHONY : src/save_to_file.cpp.o
 
 src/save_to_file.i: src/save_to_file.cpp.i
@@ -142,7 +156,8 @@ src/save_to_file.i: src/save_to_file.cpp.i
 
 # target to preprocess a source file
 src/save_to_file.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/save_to_file.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/save_to_file_amd.dir/build.make CMakeFiles/save_to_file_amd.dir/src/save_to_file.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/save_to_file.dir/build.make CMakeFiles/save_to_file.dir/src/save_to_file.cpp.i
 .PHONY : src/save_to_file.cpp.i
 
 src/save_to_file.s: src/save_to_file.cpp.s
@@ -150,7 +165,8 @@ src/save_to_file.s: src/save_to_file.cpp.s
 
 # target to generate assembly for a file
 src/save_to_file.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/main.dir/build.make CMakeFiles/main.dir/src/save_to_file.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/save_to_file_amd.dir/build.make CMakeFiles/save_to_file_amd.dir/src/save_to_file.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/save_to_file.dir/build.make CMakeFiles/save_to_file.dir/src/save_to_file.cpp.s
 .PHONY : src/save_to_file.cpp.s
 
 # Help Target
@@ -161,7 +177,8 @@ help:
 	@echo "... depend"
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
-	@echo "... main"
+	@echo "... save_to_file"
+	@echo "... save_to_file_amd"
 	@echo "... src/save_to_file.o"
 	@echo "... src/save_to_file.i"
 	@echo "... src/save_to_file.s"

@@ -22,19 +22,17 @@ int main()
 {
     // set up memory
     // initilize the simulation
-    Simulation sim(10, 10, 10);
+    //                                   unused   unused    unused          unused     
+    //             width, height, depth, density, visocity, speed_of_sound, node_size, cyc_radius, tau
+    Simulation sim(10, 10, 10, 0.1f, 0.1f, 0.1f, 1.0f, 2.0f, 0.8f);
 
     sycl::range<3> tempDims = sim.get_dimensions();
     
     //                                                     port #, data pointer,   width,           height,          depth
     Messenger velocity_messenger = Messenger<sycl::float4>(4000, sim.vector_array, tempDims.get(0), tempDims.get(1), tempDims.get(2));
     Messenger density_messenger = Messenger<float>(4001, sim.density_array, tempDims.get(0), tempDims.get(1), tempDims.get(2));
-
-    // messenger test 
-    // sycl::float4 * tempTestData = new sycl::float4[2];
-    // tempTestData[0] = sycl::float4(1.0f, 1.0f, 1.0f, 1.0f);
-    // tempTestData[1] = sycl::float4(0.0f, 0.0f, 0.0f, 0.0f);
-    // Messenger messenger = Messenger(4331, tempTestData, 2, 1, 1);
+    // for sending and recevieing data about the simulation conditions, and for receiveing commands from the frontend
+    // Messenger communication_messenger = Messenger<int>(4002, sim.density_array, tempDims.get(0), tempDims.get(1), tempDims.get(2)); // does not work
 
     std::cout << "simulation: width is " << tempDims.get(0) << ", height is " << tempDims.get(1) << ", depth is " << tempDims.get(2) << "\n";
 
@@ -49,7 +47,7 @@ int main()
         std::cout << "// frame " << count << " //\n";
         std::cout << "/////////////\n" << std::endl;
 
-        sim.next_frame(1.0f);
+        sim.next_frame();
 
         if(count > 1000) { exit.store(true); }
 
@@ -65,6 +63,5 @@ int main()
 
     std::cout << "\n";
 
-    // free(tempTestData); // free messenger test temp data
     return 0;
 }

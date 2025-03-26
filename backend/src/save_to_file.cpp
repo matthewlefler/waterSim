@@ -46,9 +46,9 @@ void write_to_file(std::ofstream & file, Simulation & sim)
 std::string filename = "test.txt";
 int main(int argc, char *argv[])
 {
-    if(argc < 3 || argc > 3)
+    if(argc < 7 || argc > 7)
     {
-        std::cout << "usage: " << argv[0] << " tau_value cylinder_radius" << std::endl;
+        std::cout << "usage: " << argv[0] << " number_of_frames_to_compute sim_width sim_height sim_depth tau_value cylinder_radius" << std::endl;
         return 0;
     }
 
@@ -63,10 +63,13 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    // set up memory
-    // initilize the simulation
+    // get the total number of frames to compute from the command line arguments
+    int number_of_frames_to_compute = std::stoi(argv[1]);
 
-    Simulation sim(20, 1, 80, 1.225f, 0.00001f, 343, 0.02f, std::stof(argv[2]), std::stof(argv[1]));
+    // set up memory
+    // initilize the simulation          unused   unused    unused          unused
+    //             width, height, depth, density, visocity, speed_of_sound, node_size, cyc_radius, tau
+    Simulation sim(std::stoi(argv[2]), std::stoi(argv[3]), std::stoi(argv[4]), 1.225f, 0.00001f, 343, 0.02f, std::stof(argv[6]), std::stof(argv[5]));
 
     sycl::range<3> temp_dims = sim.get_dimensions();
     
@@ -75,7 +78,7 @@ int main(int argc, char *argv[])
     // write the dimentions to the top line in the file
     file << temp_dims.get(0) << " " << temp_dims.get(1) << " " << temp_dims.get(2) << "\n"; 
 
-    int count = 0;
+    int current_frame_number = 0;
     std::atomic<bool> exit = std::atomic<bool>();
     exit.store(false);
 
@@ -88,7 +91,7 @@ int main(int argc, char *argv[])
         sim.next_frame();
 
 
-        if(count > 1000) { exit.store(true); }
+        if(current_frame_number > number_of_frames_to_compute) { exit.store(true); }
 
         if(exit.load())
         {
@@ -96,7 +99,7 @@ int main(int argc, char *argv[])
             break;
         }
 
-        ++count;
+        ++current_frame_number;
     }
 
     file.close();

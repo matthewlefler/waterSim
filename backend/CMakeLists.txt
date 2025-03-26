@@ -1,3 +1,5 @@
+execute_process(COMMAND bash -c "source /opt/intel/oneapi/setvars.sh --force")
+
 # complier and compiler options
 set(CMAKE_CXX_COMPILER /opt/intel/oneapi/compiler/2025.0/bin/icpx)
 
@@ -7,13 +9,42 @@ project(waterSim CXX)
 
 set(CMAKE_BUILD_TYPE "debug")
 
-set(COMPILE_FLAGS "-fsycl -g -fsycl-targets=amdgcn-amd-amdhsa -Xsycl-target-backend --offload-arch=gfx1102")
-set(LINK_FLAGS "-fsycl -g -fsycl-targets=amdgcn-amd-amdhsa -Xsycl-target-backend --offload-arch=gfx1102")
-
-add_executable(main src/save_to_file.cpp)
-
-set_target_properties(main PROPERTIES COMPILE_FLAGS ${COMPILE_FLAGS})
-set_target_properties(main PROPERTIES LINK_FLAGS ${LINK_FLAGS})
-
 find_package(Poco REQUIRED Net)
-target_link_libraries(main Poco::Net)
+
+# amd gpu specific compile/link command arguments
+set(COMPILE_FLAGS_AMD "-fsycl -g -fsycl-targets=amdgcn-amd-amdhsa -Xsycl-target-backend --offload-arch=gfx1102")
+set(LINK_FLAGS_AMD "-fsycl -g -fsycl-targets=amdgcn-amd-amdhsa -Xsycl-target-backend --offload-arch=gfx1102")
+
+# regular specific compile/link command arguments
+set(COMPILE_FLAGS "-fsycl -g")
+set(LINK_FLAGS "-fsycl -g")
+
+# amd gpu specific executables 
+add_executable(save_to_file_amd src/save_to_file.cpp)
+
+set_target_properties(save_to_file_amd PROPERTIES COMPILE_FLAGS ${COMPILE_FLAGS_AMD})
+set_target_properties(save_to_file_amd PROPERTIES LINK_FLAGS ${LINK_FLAGS_AMD})
+
+target_link_libraries(save_to_file_amd Poco::Net)
+
+# add_executable(main_amd src/main.cpp)
+
+# set_target_properties(main_amd PROPERTIES COMPILE_FLAGS ${COMPILE_FLAGS_AMD})
+# set_target_properties(main_amd PROPERTIES LINK_FLAGS ${LINK_FLAGS_AMD})
+
+# target_link_libraries(main_amd Poco::Net)
+
+# regular executables
+add_executable(save_to_file src/save_to_file.cpp)
+
+set_target_properties(save_to_file PROPERTIES COMPILE_FLAGS ${COMPILE_FLAGS})
+set_target_properties(save_to_file PROPERTIES LINK_FLAGS ${LINK_FLAGS})
+
+target_link_libraries(save_to_file Poco::Net)
+
+# add_executable(main src/main.cpp)
+
+# set_target_properties(main PROPERTIES COMPILE_FLAGS ${COMPILE_FLAGS})
+# set_target_properties(main PROPERTIES LINK_FLAGS ${LINK_FLAGS})
+
+# target_link_libraries(main Poco::Net)

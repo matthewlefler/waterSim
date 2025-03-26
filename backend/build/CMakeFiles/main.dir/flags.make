@@ -6,5 +6,5 @@ CXX_DEFINES = -DPOCO_ENABLE_CPP11 -DPOCO_ENABLE_CPP14 -DPOCO_HAVE_FD_EPOLL -DPOC
 
 CXX_INCLUDES = 
 
-CXX_FLAGS = -g -Rno-debug-disables-optimization -fsycl -g -fsycl-targets=amdgcn-amd-amdhsa -Xsycl-target-backend --offload-arch=gfx1102
+CXX_FLAGS = -g -Rno-debug-disables-optimization -fsycl -g
 

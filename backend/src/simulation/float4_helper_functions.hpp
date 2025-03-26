@@ -1,4 +1,4 @@
-#include <sycl/sycl.hpp>
+#include <sycl/sycl.hpp> // the main library used for parrellelism 
 
 /**
  * this function does the dotproduct of the xyz componets of the float4 and the x, y, z floats

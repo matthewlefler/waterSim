@@ -4,5 +4,6 @@
 *.json
 *.pdb
 Debug/*
-build/**
+backend/build/CMakeFiles/**
+build/CMakeFiles/**
 test.txt
