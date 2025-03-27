@@ -6,4 +6,7 @@
 Debug/*
 backend/build/CMakeFiles/**
 build/CMakeFiles/**
+backend/build/MakeFile
+backend/build/**
+
 test.txt
