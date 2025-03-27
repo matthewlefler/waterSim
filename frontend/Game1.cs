@@ -87,7 +87,7 @@ public class Game1 : Game
 
         levelSelector.addLevel(new ReadFileLevel2D("/home/lefler/Documents/gitRepos/waterSim/backend/build/test.txt", GraphicsDevice, screen_x, screen_y));
         
-        levelSelector.addLevel(new NetworkedSimulation(GraphicsDevice));
+        // levelSelector.addLevel(new NetworkedSimulation(GraphicsDevice)); // currently non-working
         
 
         current_level = levelSelector;        

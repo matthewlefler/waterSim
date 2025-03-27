@@ -46,10 +46,17 @@ public class LevelSelector : ILevel
     {
         graphics_device.Clear(Color.SkyBlue);
 
+        Color color = Color.White;
+
+        float size = 0.7f;
+        float height = font.LineHeight * size;
+
+        sprite_batch.DrawString(font, "^", 
+                        new Vector2(screen_width / 2.0f - size * (font.MeasureString("^").Width / 2.0f), -1 * height + ((screen_height / 2) - (levels.Count * 30))),
+                        color, 0, Vector2.Zero, size, SpriteEffects.None, 0.0f);
+
         for (int i = 0; i < levels.Count; i++)
         {
-            Color color = Color.White;
-            float size = 0.7f;
 
             string level_name = levels[i].getName();
 
@@ -58,12 +65,14 @@ public class LevelSelector : ILevel
                 level_name = "- " + level_name + " -";
             }
 
-            float height = font.LineHeight * size;
-
             sprite_batch.DrawString(font, level_name, 
                                     new Vector2(screen_width / 2.0f - size * (font.MeasureString(level_name).Width / 2.0f), i * height + ((screen_height / 2) - (levels.Count * 30))),
                                     color, 0, Vector2.Zero, size, SpriteEffects.None, 0.0f);
         }
+
+        sprite_batch.DrawString(font, "^", 
+                new Vector2(screen_width / 2.0f + size * (font.MeasureString("^").Width / 2.0f), (levels.Count + 1) * height + ((screen_height / 2) - (levels.Count * 30))),
+                color, MathF.PI, Vector2.Zero, size, SpriteEffects.None, 0.0f);
     }
 
 

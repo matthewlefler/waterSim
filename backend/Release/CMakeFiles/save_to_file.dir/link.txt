@@ -1,1 +1,1 @@
-/opt/intel/oneapi/compiler/2025.0/bin/icpx -O3 -DNDEBUG -fsycl -fast CMakeFiles/save_to_file.dir/src/save_to_file.cpp.o -o save_to_file  /home/lefler/Documents/gitRepos/waterSim/backend/libraries/libPocoNet.a 
+/opt/intel/oneapi/compiler/2025.0/bin/icpx -O3 -DNDEBUG -fsycl -g CMakeFiles/save_to_file.dir/src/save_to_file.cpp.o -o save_to_file  -lPocoNet 
