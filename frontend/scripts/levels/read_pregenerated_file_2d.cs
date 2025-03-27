@@ -73,7 +73,13 @@ public class ReadFileLevel2D : ILevel
 
         sprite_batch.Draw(current_texture, new Rectangle(new Point(0, 0), new Point(screen_width, screen_height)), Color.White);
 
-        sprite_batch.DrawString(font, "current frame = " + current_frame.ToString(), new Vector2(10, 130), Color.White, 0, Vector2.Zero, 0.3f, SpriteEffects.None, 0f);
+        sprite_batch.DrawString(font, "current frame = " + current_frame.ToString(), new Vector2(10, 120), Color.White, 0, Vector2.Zero, 0.3f, SpriteEffects.None, 0f);
+
+        sprite_batch.DrawString(font, "keybinds:", new Vector2(2, 20), Color.WhiteSmoke, 0, Vector2.Zero, 0.3f, SpriteEffects.None, 0f);
+        sprite_batch.DrawString(font, "next/previous frame : right/left arrow", new Vector2(2, 40), Color.WhiteSmoke, 0, Vector2.Zero, 0.3f, SpriteEffects.None, 0f);
+        sprite_batch.DrawString(font, "play animation (a bit laggy) : space bar", new Vector2(2, 60), Color.WhiteSmoke, 0, Vector2.Zero, 0.3f, SpriteEffects.None, 0f);
+        sprite_batch.DrawString(font, "go to percentage : numpad keys", new Vector2(2, 80), Color.WhiteSmoke, 0, Vector2.Zero, 0.3f, SpriteEffects.None, 0f);
+        sprite_batch.DrawString(font, "quit : esc", new Vector2(2, 100), Color.WhiteSmoke, 0, Vector2.Zero, 0.3f, SpriteEffects.None, 0f);
     }
 
     public string getName()

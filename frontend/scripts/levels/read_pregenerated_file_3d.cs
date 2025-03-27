@@ -10,6 +10,7 @@ using MonoGame.Extended.BitmapFonts;
 
 using Objects;
 using Cameras;
+using System;
 
 namespace Levels;
 public class ReadFileLevel3D : ILevel
@@ -56,6 +57,15 @@ public class ReadFileLevel3D : ILevel
         effect.Projection = camera.projection_matrix;
         effect.View = camera.view_matrix;
 
+        sprite_batch.DrawString(font, "current frame = " + current_frame.ToString(), new Vector2(10, 140), Color.White, 0, Vector2.Zero, 0.3f, SpriteEffects.None, 0f);
+
+        sprite_batch.DrawString(font, "keybinds:", new Vector2(2, 20), Color.WhiteSmoke, 0, Vector2.Zero, 0.3f, SpriteEffects.None, 0f);
+        sprite_batch.DrawString(font, "move : wasd", new Vector2(2, 40), Color.WhiteSmoke, 0, Vector2.Zero, 0.3f, SpriteEffects.None, 0f);
+        sprite_batch.DrawString(font, "next/previous frame : right/left arrow", new Vector2(2, 60), Color.WhiteSmoke, 0, Vector2.Zero, 0.3f, SpriteEffects.None, 0f);
+        sprite_batch.DrawString(font, "play animation (laggy) : space bar", new Vector2(2, 80), Color.WhiteSmoke, 0, Vector2.Zero, 0.3f, SpriteEffects.None, 0f);
+        sprite_batch.DrawString(font, "go to percentage : numpad keys", new Vector2(2, 100), Color.WhiteSmoke, 0, Vector2.Zero, 0.3f, SpriteEffects.None, 0f);
+        sprite_batch.DrawString(font, "quit : esc", new Vector2(2, 120), Color.WhiteSmoke, 0, Vector2.Zero, 0.3f, SpriteEffects.None, 0f);
+
         sim.Draw(effect);
     }
 
@@ -68,6 +78,12 @@ public class ReadFileLevel3D : ILevel
     {
         // read file
         string[] lines = File.ReadAllLines(filepath);
+
+        if(lines.Length <= 0)
+        {
+            throw new ArgumentException("file: " + filepath + " is empty");
+        }
+
         this.frame_count = lines.Length;
 
         string[] dims = lines[0].Trim().Split(" ");

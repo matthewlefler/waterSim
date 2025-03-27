@@ -9,13 +9,15 @@ project(waterSim CXX)
 
 find_package(Poco REQUIRED Net)
 
+set(PocoNet ${CMAKE_SOURCE_DIR}/libraries/libPocoNet.a)
+
 # amd gpu specific compile/link command arguments
-set(COMPILE_FLAGS_AMD "-fsycl -fast -fsycl-targets=amdgcn-amd-amdhsa -Xsycl-target-backend --offload-arch=gfx1102")
-set(LINK_FLAGS_AMD "-fsycl -fast -fsycl-targets=amdgcn-amd-amdhsa -Xsycl-target-backend --offload-arch=gfx1102")
+set(COMPILE_FLAGS_AMD "-fsycl -fsycl-targets=amdgcn-amd-amdhsa -Xsycl-target-backend --offload-arch=gfx1102")
+set(LINK_FLAGS_AMD "-fsycl -fsycl-targets=amdgcn-amd-amdhsa -Xsycl-target-backend --offload-arch=gfx1102")
 
 # regular specific compile/link command arguments
-set(COMPILE_FLAGS "-fsycl -fast")
-set(LINK_FLAGS "-fsycl -fast")
+set(COMPILE_FLAGS "-fsycl -g")
+set(LINK_FLAGS "-fsycl -g")
 
 # amd gpu specific executables 
 add_executable(save_to_file_amd src/save_to_file.cpp)
@@ -23,7 +25,7 @@ add_executable(save_to_file_amd src/save_to_file.cpp)
 set_target_properties(save_to_file_amd PROPERTIES COMPILE_FLAGS ${COMPILE_FLAGS_AMD})
 set_target_properties(save_to_file_amd PROPERTIES LINK_FLAGS ${LINK_FLAGS_AMD})
 
-target_link_libraries(save_to_file_amd ${CMAKE_SOURCE_DIR}/libraries/libPocoNet.a)
+target_link_libraries(save_to_file_amd PocoNet)
 
 # add_executable(main_amd src/main.cpp)
 
@@ -38,7 +40,7 @@ add_executable(save_to_file src/save_to_file.cpp)
 set_target_properties(save_to_file PROPERTIES COMPILE_FLAGS ${COMPILE_FLAGS})
 set_target_properties(save_to_file PROPERTIES LINK_FLAGS ${LINK_FLAGS})
 
-target_link_libraries(save_to_file ${CMAKE_SOURCE_DIR}/libraries/libPocoNet.a)
+target_link_libraries(save_to_file PocoNet)
 
 # add_executable(main src/main.cpp)
 
